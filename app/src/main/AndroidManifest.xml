@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Permisos necesarios -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"
+        tools:ignore="ScopedStorage" />
+
+    <!-- Features -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Catedra_Fam"
+        android:enableOnBackInvokedCallback="true"
+        tools:targetApi="31">
+
+        <!-- Onboarding Activity (LAUNCHER - Punto de entrada) -->
+        <activity
+            android:name=".onboarding.OnboardingActivity"
+            android:exported="true"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Login Activity -->
+        <activity
+            android:name=".LoginActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Main Activity (Dashboard) -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Recuperar Contraseña Activity -->
+        <activity
+            android:name=".RecuperarContrasenaActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Verificar Código Activity -->
+        <activity
+            android:name=".VerificarCodigoActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Nueva Contraseña Activity -->
+        <activity
+            android:name=".NuevaContrasenaActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Cambiar Contraseña Activity -->
+        <activity
+            android:name=".CambiarContrasenaActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Soporte Activity -->
+        <activity
+            android:name=".SoporteActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Tareas Activity -->
+        <activity
+            android:name=".TareasActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Tarea Detalle Activity -->
+        <activity
+            android:name=".TareaDetalleActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Historial Activity -->
+        <activity
+            android:name=".HistorialActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <!-- Notificaciones Activity -->
+        <activity
+            android:name=".NotificacionesActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+    </application>
+
+</manifest>
+

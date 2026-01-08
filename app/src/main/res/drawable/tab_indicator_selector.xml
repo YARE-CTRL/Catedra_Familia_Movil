@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Estado seleccionado - Barra alargada -->
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="4dp" />
+            <size android:width="24dp" android:height="8dp" />
+            <solid android:color="@color/white" />
+        </shape>
+    </item>
+
+    <!-- Estado no seleccionado - Círculo pequeño -->
+    <item>
+        <shape android:shape="oval">
+            <size android:width="8dp" android:height="8dp" />
+            <solid android:color="#50FFFFFF" />
+        </shape>
+    </item>
+
+</selector>
+

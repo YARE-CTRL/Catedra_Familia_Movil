@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/card_tarea"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp"
+    app:strokeWidth="0dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- Indicador de estado (línea de color) -->
+        <View
+            android:id="@+id/view_indicador"
+            android:layout_width="6dp"
+            android:layout_height="match_parent"
+            android:background="@color/primary" />
+
+        <!-- Contenido de la tarea -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Título -->
+            <TextView
+                android:id="@+id/tv_titulo_tarea"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Lectura en familia"
+                android:textColor="@color/gray_900"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp" />
+
+            <!-- Fecha -->
+            <TextView
+                android:id="@+id/tv_fecha"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Vence: 29 Nov 2026"
+                android:textColor="@color/gray_600"
+                android:textSize="13sp"
+                android:layout_marginBottom="4dp" />
+
+            <!-- Frecuencia y Estado en una línea -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:id="@+id/tv_frecuencia"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Semanal"
+                    android:textColor="@color/gray_600"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" | "
+                    android:textColor="@color/gray_300"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tv_estado"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sin entregar"
+                    android:textColor="@color/warning"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <!-- Nota (solo si está calificada) -->
+            <TextView
+                android:id="@+id/tv_nota"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Nota: Alto (4.5)"
+                android:textColor="@color/secondary"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Botón de acción -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_accion"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="VER DETALLE"
+                android:textSize="12sp"
+                app:cornerRadius="8dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
+

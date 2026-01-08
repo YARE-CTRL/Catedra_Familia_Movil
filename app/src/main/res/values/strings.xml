@@ -1,0 +1,141 @@
+<resources>
+    <string name="app_name">Cátedra Familia</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_saltar">Saltar</string>
+    <string name="onboarding_siguiente">Siguiente →</string>
+    <string name="onboarding_atras">← Atrás</string>
+    <string name="onboarding_comenzar">COMENZAR 🚀</string>
+
+    <!-- Login -->
+    <string name="bienvenido_titulo">Bienvenido a PARCHANDO JUNTOS</string>
+    <string name="ingresa_correo">Ingresa con tu correo</string>
+    <string name="hint_correo">correo@ejemplo.com</string>
+    <string name="hint_contrasena">Contraseña</string>
+    <string name="recordar_sesion">Recordar sesión</string>
+    <string name="btn_ingresar">INGRESAR</string>
+    <string name="olvidaste_contrasena">¿Olvidaste tu contraseña?</string>
+    <string name="necesitas_ayuda">¿Necesitas ayuda?</string>
+    <string name="sin_conexion_offline">Sin conexión - Modo offline</string>
+
+    <!-- Cambiar Contraseña -->
+    <string name="cambiar_contrasena_titulo">Bienvenido a Cátedra de Familia</string>
+    <string name="cambiar_contrasena_mensaje">Por seguridad, debes crear una nueva contraseña</string>
+    <string name="contrasena_actual">Contraseña actual</string>
+    <string name="nueva_contrasena">Nueva contraseña</string>
+    <string name="confirmar_contrasena">Confirmar contraseña</string>
+    <string name="requisitos_titulo">Requisitos:</string>
+    <string name="requisito_8_chars">Mínimo 8 caracteres</string>
+    <string name="requisito_mayuscula">Una mayúscula</string>
+    <string name="requisito_numero">Un número</string>
+    <string name="requisito_simbolo">Un símbolo (@#$%&amp;*)</string>
+    <string name="btn_actualizar_contrasena">ACTUALIZAR CONTRASEÑA</string>
+
+    <!-- Recuperar Contraseña -->
+    <string name="recuperar_contrasena_titulo">Recuperar Contraseña</string>
+    <string name="recuperar_pregunta">¿Olvidaste tu contraseña?</string>
+    <string name="recuperar_mensaje">Te enviaremos un código para recuperarla.</string>
+    <string name="correo_o_telefono">Correo electrónico o teléfono</string>
+    <string name="btn_enviar_codigo">ENVIAR CÓDIGO</string>
+    <string name="recibiras_codigo">Recibirás el código por:</string>
+    <string name="por_email">• Correo electrónico</string>
+    <string name="por_sms">• SMS (si está registrado)</string>
+    <string name="revisar_spam">Revisa tu carpeta de spam</string>
+
+    <!-- Verificar Código -->
+    <string name="verificar_codigo_titulo">Verificar Código</string>
+    <string name="ingresa_codigo">Ingresa el código de 6 dígitos enviado a:</string>
+    <string name="btn_verificar_codigo">VERIFICAR CÓDIGO</string>
+    <string name="codigo_expira">El código expira en:</string>
+    <string name="no_recibiste_codigo">¿No recibiste el código?</string>
+    <string name="reenviar_codigo">Reenviar código</string>
+    <string name="esperar_segundos">espera %1$ds</string>
+
+    <!-- Nueva Contraseña -->
+    <string name="nueva_contrasena_titulo">Nueva Contraseña</string>
+    <string name="crear_contrasena_segura">Crea una contraseña segura</string>
+    <string name="btn_guardar_contrasena">GUARDAR CONTRASEÑA</string>
+
+    <!-- Soporte -->
+    <string name="soporte_titulo">Ayuda y Soporte</string>
+    <string name="preguntas_frecuentes">Preguntas Frecuentes</string>
+    <string name="contacto_directo">Contacto Directo</string>
+    <string name="reportar_problema">Reportar un Problema</string>
+    <string name="email_label">Email:</string>
+    <string name="email_soporte">parchandojuntos2025@gmail.com</string>
+    <string name="btn_enviar_email">ENVIAR EMAIL</string>
+    <string name="whatsapp_label">WhatsApp:</string>
+    <string name="whatsapp_numero">310 739 2818</string>
+    <string name="btn_abrir_whatsapp">ABRIR WHATSAPP</string>
+    <string name="horario_atencion">Horario de atención:</string>
+    <string name="horario_detalle">Lun-Vie: 8:00am - 5:00pm</string>
+    <string name="describe_problema">Describe el problema:</string>
+    <string name="btn_adjuntar_captura">ADJUNTAR CAPTURA</string>
+    <string name="btn_enviar_reporte">ENVIAR REPORTE</string>
+    <string name="version_app">Versión de la app: %1$s</string>
+
+    <!-- Mensajes generales -->
+    <string name="campo_vacio">Este campo es obligatorio</string>
+    <string name="email_invalido">Email inválido</string>
+    <string name="contrasena_corta">La contraseña debe tener al menos 8 caracteres</string>
+    <string name="contrasenas_no_coinciden">Las contraseñas no coinciden</string>
+    <string name="error_conexion">Error de conexión. Verifica tu internet.</string>
+    <string name="iniciando_sesion">Iniciando sesión...</string>
+    <string name="actualizando">Actualizando...</string>
+    <string name="enviando">Enviando...</string>
+    <string name="verificando">Verificando...</string>
+
+    <!-- Navigation Drawer -->
+    <string name="navigation_drawer_open">Abrir menú</string>
+    <string name="navigation_drawer_close">Cerrar menú</string>
+    <string name="nav_inicio">Inicio</string>
+    <string name="nav_mis_hijos">Mis Hijos</string>
+    <string name="nav_tareas">Tareas</string>
+    <string name="nav_notificaciones">Notificaciones</string>
+    <string name="nav_historial">Historial</string>
+    <string name="nav_ayuda">Ayuda</string>
+    <string name="nav_cerrar_sesion">Cerrar Sesión</string>
+
+    <!-- Demo data (se removerá cuando haya API) -->
+    <string name="greeting">¡Bienvenido!</string>
+    <string name="subtitle">Proyecto con diseño moderno</string>
+    <string name="animation_title">Animación Interactiva</string>
+    <string name="button_text">Comenzar</string>
+    <string name="loading_text">Cargando contenido…</string>
+
+    <!-- Tareas -->
+    <string name="tareas_titulo">Tareas de %1$s</string>
+    <string name="tareas_filtro_todas">Todas</string>
+    <string name="tareas_filtro_pendientes">Pendientes</string>
+    <string name="tareas_filtro_completadas">Completadas</string>
+    <string name="tareas_filtro_calificadas">Calificadas</string>
+    <string name="tareas_vacio_titulo">No hay tareas</string>
+    <string name="tareas_vacio_mensaje">Las tareas asignadas aparecerán aquí</string>
+    <string name="estado_pendiente">Pendiente</string>
+    <string name="estado_completada">Completada</string>
+    <string name="estado_vencida">Vencida</string>
+    <string name="estado_calificada">Calificada</string>
+    <string name="ver_detalle">VER DETALLE</string>
+    <string name="entregar_ya">ENTREGAR YA</string>
+    <string name="ver_nota">VER NOTA</string>
+
+    <!-- Tarea Detalle -->
+    <string name="detalle_titulo">Detalle de Tarea</string>
+    <string name="detalle_frecuencia">Frecuencia:</string>
+    <string name="detalle_vence">Vence:</string>
+    <string name="detalle_para_boletin">Para el boletín:</string>
+    <string name="detalle_descripcion">Descripción</string>
+    <string name="detalle_evidencia">Tu Evidencia</string>
+    <string name="evidencia_hint">Describe qué hicieron en familia…</string>
+    <string name="archivos_adjuntos">Fotos/Videos</string>
+    <string name="btn_foto">FOTO</string>
+    <string name="btn_galeria">GALERÍA</string>
+    <string name="btn_enviar_evidencia">ENVIAR EVIDENCIA</string>
+    <string name="compresion_hint">Se comprimirán las imágenes (máx 3)</string>
+    <string name="calificacion_titulo">Calificación</string>
+    <string name="nota_label">Nota:</string>
+    <string name="feedback_label">Retroalimentación:</string>
+    <string name="frecuencia_semanal">Semanal</string>
+    <string name="frecuencia_quincenal">Quincenal</string>
+    <string name="frecuencia_mensual">Mensual</string>
+</resources>

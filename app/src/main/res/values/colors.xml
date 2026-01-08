@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- PALETA OFICIAL - LOGO PARCHANDO JUNTOS                      -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <!-- Azules / Verdes (identidad principal) -->
+    <color name="primary">#0B4F5C</color>           <!-- Azul petróleo oscuro -->
+    <color name="primary_dark">#083A44</color>      <!-- Azul petróleo más oscuro (variante) -->
+    <color name="primary_light">#1FA3A8</color>     <!-- Verde azulado (teal) -->
+    <color name="secondary">#7CCFD0</color>         <!-- Turquesa claro -->
+
+    <!-- Amarillos / Naranjas (brújula y acentos) -->
+    <color name="accent">#F2C94C</color>            <!-- Amarillo dorado -->
+    <color name="accent_orange">#F2992E</color>     <!-- Naranja intenso -->
+
+    <!-- Morado / Artístico -->
+    <color name="purple_soft">#9B5FA6</color>       <!-- Morado suave -->
+    <color name="pink_lilac">#E4B6D2</color>        <!-- Rosa lila claro -->
+
+    <!-- Neutros -->
+    <color name="white">#FFFFFF</color>             <!-- Blanco (fondo) -->
+    <color name="black">#000000</color>             <!-- Negro -->
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- COLORES FUNCIONALES (derivados de la paleta)               -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <!-- Estados de tareas -->
+    <color name="success">#1FA3A8</color>           <!-- Verde azulado - completadas -->
+    <color name="warning">#F2C94C</color>           <!-- Amarillo dorado - próximas a vencer -->
+    <color name="danger">#F2992E</color>            <!-- Naranja - vencidas -->
+    <color name="info">#7CCFD0</color>              <!-- Turquesa - información -->
+
+    <!-- Grises (generados complementarios) -->
+    <color name="gray_50">#F9FAFB</color>           <!-- Fondos claros -->
+    <color name="gray_100">#F3F4F6</color>          <!-- Fondos de cards -->
+    <color name="gray_300">#D1D5DB</color>          <!-- Bordes -->
+    <color name="gray_400">#9CA3AF</color>          <!-- Bordes/textos suaves -->
+    <color name="gray_600">#4B5563</color>          <!-- Textos secundarios -->
+    <color name="gray_900">#111827</color>          <!-- Textos principales -->
+
+    <!-- Offline mode -->
+    <color name="offline_bg">#FEF3C7</color>        <!-- Banner offline (amarillo claro) -->
+    <color name="offline_text">#92400E</color>      <!-- Texto offline -->
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- COMPATIBILIDAD MATERIAL DESIGN                              -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <color name="purple_200">#E4B6D2</color>        <!-- Rosa lila del logo -->
+    <color name="purple_500">#9B5FA6</color>        <!-- Morado suave del logo -->
+    <color name="purple_700">#7A4C85</color>        <!-- Morado oscuro (variante) -->
+    <color name="teal_200">#7CCFD0</color>          <!-- Turquesa claro del logo -->
+    <color name="teal_700">#1FA3A8</color>          <!-- Verde azulado del logo -->
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- COLORES ADICIONALES PARA UI                                 -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <color name="background_color">#FFFFFF</color>  <!-- Fondo principal blanco -->
+    <color name="text_primary">#0B4F5C</color>      <!-- Texto principal (azul petróleo) -->
+    <color name="text_secondary">#4B5563</color>    <!-- Texto secundario (gris) -->
+    <color name="shimmer_placeholder">#E0E0E0</color>
+</resources>
+

@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/card_hijo"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    app:rippleColor="@color/primary">
+
+    <!-- Indicador lateral de estado -->
+    <View
+        android:id="@+id/view_indicador"
+        android:layout_width="4dp"
+        android:layout_height="match_parent"
+        android:background="@color/success" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp">
+
+        <!-- Header: Avatar + Nombre + Curso -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Avatar con iniciales -->
+            <FrameLayout
+                android:layout_width="48dp"
+                android:layout_height="48dp">
+
+                <View
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_circle_primary" />
+
+                <TextView
+                    android:id="@+id/tv_iniciales"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="JP"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"
+                    tools:text="JP" />
+
+            </FrameLayout>
+
+            <!-- Nombre y Curso -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_nombre_hijo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Juan Pérez"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/gray_900"
+                    tools:text="Juan Pérez" />
+
+                <TextView
+                    android:id="@+id/tv_curso"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="5° A"
+                    android:textSize="13sp"
+                    android:textColor="@color/gray_600"
+                    tools:text="5° A" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"
+            android:background="@color/gray_100" />
+
+        <!-- Estadísticas de Tareas -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Pendientes -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/tv_pendientes"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="2 pendientes"
+                    android:textSize="12sp"
+                    android:textColor="@color/warning"
+                    tools:text="2 pendientes" />
+
+            </LinearLayout>
+
+            <!-- Completadas -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/tv_completadas"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="3 completadas"
+                    android:textSize="12sp"
+                    android:textColor="@color/success"
+                    tools:text="3 completadas" />
+
+            </LinearLayout>
+
+            <!-- Calificadas -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/tv_calificadas"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1 calificada"
+                    android:textSize="12sp"
+                    android:textColor="@color/info"
+                    tools:text="1 calificada" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Próxima Tarea (si aplica) -->
+        <TextView
+            android:id="@+id/tv_proxima_tarea"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:padding="10dp"
+            android:background="@drawable/bg_proxima_tarea"
+            android:text="📅 Lectura familiar - 15 Ene"
+            android:textSize="12sp"
+            android:textColor="@color/gray_600"
+            android:visibility="visible"
+            tools:text="📅 Lectura familiar - 15 Ene" />
+
+        <!-- Botón Ver Tareas -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_ver_tareas"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="VER TODAS LAS TAREAS →"
+            android:textColor="@color/primary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
