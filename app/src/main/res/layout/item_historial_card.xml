@@ -113,7 +113,7 @@
             <!-- Botón Ver Evidencia -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_ver_evidencia"
-                style="@style/Widget.Material3.Button.TonalButton"
+                style="@style/CustomTonalButton"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
                 android:layout_gravity="end"

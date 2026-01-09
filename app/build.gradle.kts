@@ -43,6 +43,14 @@ dependencies {
     implementation("androidx.cardview:cardview:1.0.0")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 
+    // Room Database
+    implementation("androidx.room:room-runtime:2.6.1")
+    annotationProcessor("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+
+    // Gson para JSON
+    implementation("com.google.code.gson:gson:2.10.1")
+
     // UI/UX Libraries
     implementation(libs.lottie)           // Animaciones Lottie
     implementation(libs.shimmer)          // Efectos Shimmer

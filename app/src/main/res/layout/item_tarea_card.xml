@@ -100,11 +100,14 @@
             <!-- Botón de acción -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_accion"
-                style="@style/Widget.Material3.Button.TonalButton"
+                style="@style/CustomTonalButton"
                 android:layout_width="wrap_content"
-                android:layout_height="40dp"
+                android:layout_height="wrap_content"
+                android:minWidth="88dp"
+                android:minHeight="44dp"
                 android:text="VER DETALLE"
                 android:textSize="12sp"
+                android:contentDescription="Ver detalle de la tarea"
                 app:cornerRadius="8dp" />
 
         </LinearLayout>

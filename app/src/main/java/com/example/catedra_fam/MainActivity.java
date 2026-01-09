@@ -222,23 +222,108 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int id = item.getItemId();
 
         if (id == R.id.nav_inicio) {
-            // Ya estamos en inicio
+            // Ya estamos en inicio, solo cerramos el drawer
+            drawerLayout.closeDrawer(GravityCompat.START);
+            return true;
+
         } else if (id == R.id.nav_mis_hijos) {
-            Toast.makeText(this, "Mis Hijos", Toast.LENGTH_SHORT).show();
+            // Mostrar lista de hijos (scroll al RecyclerView)
+            drawerLayout.closeDrawer(GravityCompat.START);
+            rvHijos.smoothScrollToPosition(0);
+            Toast.makeText(this, "Aquí están tus hijos", Toast.LENGTH_SHORT).show();
+
         } else if (id == R.id.nav_tareas) {
-            Toast.makeText(this, "Tareas", Toast.LENGTH_SHORT).show();
+            // Abrir tareas del primer hijo o mostrar selector si hay varios
+            drawerLayout.closeDrawer(GravityCompat.START);
+            if (!listaHijos.isEmpty()) {
+                if (listaHijos.size() == 1) {
+                    abrirTareasDeHijo(listaHijos.get(0));
+                } else {
+                    mostrarSelectorHijo();
+                }
+            } else {
+                Toast.makeText(this, "No hay hijos registrados", Toast.LENGTH_SHORT).show();
+            }
+
         } else if (id == R.id.nav_notificaciones) {
-            Toast.makeText(this, "Notificaciones", Toast.LENGTH_SHORT).show();
+            drawerLayout.closeDrawer(GravityCompat.START);
+            Intent intent = new Intent(this, NotificacionesActivity.class);
+            startActivity(intent);
+
         } else if (id == R.id.nav_historial) {
-            Toast.makeText(this, "Historial", Toast.LENGTH_SHORT).show();
+            drawerLayout.closeDrawer(GravityCompat.START);
+            if (!listaHijos.isEmpty()) {
+                if (listaHijos.size() == 1) {
+                    abrirHistorialDeHijo(listaHijos.get(0));
+                } else {
+                    mostrarSelectorHijoParaHistorial();
+                }
+            } else {
+                Toast.makeText(this, "No hay hijos registrados", Toast.LENGTH_SHORT).show();
+            }
+
         } else if (id == R.id.nav_ayuda) {
-            startActivity(new Intent(this, SoporteActivity.class));
+            drawerLayout.closeDrawer(GravityCompat.START);
+            Intent intent = new Intent(this, SoporteActivity.class);
+            startActivity(intent);
+
         } else if (id == R.id.nav_cerrar_sesion) {
-            cerrarSesion();
+            drawerLayout.closeDrawer(GravityCompat.START);
+            confirmarCerrarSesion();
+            return true;
         }
 
-        drawerLayout.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void mostrarSelectorHijo() {
+        String[] nombresHijos = new String[listaHijos.size()];
+        for (int i = 0; i < listaHijos.size(); i++) {
+            nombresHijos[i] = listaHijos.get(i).getNombres() + " " + listaHijos.get(i).getApellidos();
+        }
+
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                .setTitle("Selecciona un hijo")
+                .setItems(nombresHijos, (dialog, which) -> {
+                    abrirTareasDeHijo(listaHijos.get(which));
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void mostrarSelectorHijoParaHistorial() {
+        String[] nombresHijos = new String[listaHijos.size()];
+        for (int i = 0; i < listaHijos.size(); i++) {
+            nombresHijos[i] = listaHijos.get(i).getNombres() + " " + listaHijos.get(i).getApellidos();
+        }
+
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                .setTitle("Selecciona un hijo")
+                .setItems(nombresHijos, (dialog, which) -> {
+                    abrirHistorialDeHijo(listaHijos.get(which));
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void abrirHistorialDeHijo(Hijo hijo) {
+        Intent intent = new Intent(this, HistorialActivity.class);
+        intent.putExtra("ESTUDIANTE_ID", hijo.getId());
+        intent.putExtra("ESTUDIANTE_NOMBRE", hijo.getNombres());
+        intent.putExtra("ESTUDIANTE_CURSO", hijo.getCursoNombre());
+        startActivity(intent);
+    }
+
+    private void confirmarCerrarSesion() {
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+                .setTitle("Cerrar sesión")
+                .setMessage("¿Estás seguro de que deseas salir?")
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setPositiveButton("Sí, salir", (dialog, which) -> {
+                    cerrarSesion();
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
     }
 
     private void cerrarSesion() {
@@ -253,6 +338,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
+
+        // Mostrar mensaje
+        Toast.makeText(this, "Sesión cerrada correctamente", Toast.LENGTH_SHORT).show();
     }
 
     @Override

@@ -138,4 +138,56 @@
     <string name="frecuencia_semanal">Semanal</string>
     <string name="frecuencia_quincenal">Quincenal</string>
     <string name="frecuencia_mensual">Mensual</string>
+
+    <!-- Accesibilidad -->
+    <string name="desc_hijo_card">Información de %1$s. %2$d tareas pendientes</string>
+    <string name="desc_tarea_card">Tarea %1$s. Vence el %2$s</string>
+    <string name="desc_filter_pending">Filtrar por tareas pendientes</string>
+    <string name="desc_filter_completed">Filtrar por tareas completadas</string>
+    <string name="desc_take_photo">Tomar foto con la cámara</string>
+    <string name="desc_select_gallery">Seleccionar de la galería</string>
+    <string name="desc_delete_file">Eliminar archivo adjunto</string>
+    <string name="desc_menu">Abrir menú de navegación</string>
+    <string name="desc_notifications">Ver notificaciones</string>
+    <string name="desc_profile_photo">Foto de perfil</string>
+
+    <!-- Feedback Messages -->
+    <string name="feedback_evidencia_enviada">✅ Evidencia enviada correctamente</string>
+    <string name="feedback_sin_conexion">📶 Sin conexión. Se enviará cuando tengas internet</string>
+    <string name="feedback_archivo_eliminado">Archivo eliminado</string>
+    <string name="feedback_tareas_filtradas">Mostrando %d tareas</string>
+    <string name="feedback_sincronizado">🔄 Actualizado hace %s</string>
+    <string name="feedback_error_red">📶 No hay conexión a internet</string>
+    <string name="feedback_sesion_cerrada">Sesión cerrada correctamente</string>
+
+    <!-- Confirmaciones -->
+    <string name="confirm_eliminar_evidencia">¿Eliminar evidencia?</string>
+    <string name="confirm_eliminar_mensaje">Esta acción no se puede deshacer</string>
+    <string name="confirm_cerrar_sesion">Cerrar sesión</string>
+    <string name="confirm_cerrar_sesion_mensaje">¿Estás seguro de que deseas salir?</string>
+    <string name="btn_eliminar">Eliminar</string>
+    <string name="btn_cancelar">Cancelar</string>
+    <string name="btn_si_salir">Sí, salir</string>
+    <string name="btn_ok">OK</string>
+
+    <!-- Estados Empty -->
+    <string name="empty_todo_al_dia">¡Todo al día! 🎉</string>
+    <string name="empty_sin_pendientes">No tienes tareas pendientes por entregar</string>
+    <string name="empty_sin_completadas">Sin tareas completadas</string>
+    <string name="empty_sin_completadas_mensaje">Las tareas que entregues aparecerán aquí</string>
+    <string name="empty_sin_notificaciones">Sin notificaciones</string>
+    <string name="empty_sin_historial">Sin historial</string>
+
+    <!-- Estados Error -->
+    <string name="error_sin_conexion">📶 Sin conexión</string>
+    <string name="error_sin_conexion_mensaje">Verifica tu conexión a internet\ne intenta nuevamente</string>
+    <string name="error_algo_salio_mal">Algo salió mal</string>
+    <string name="error_intenta_nuevamente">Por favor, intenta nuevamente</string>
+    <string name="btn_reintentar">REINTENTAR</string>
+    <string name="btn_ver_guardados">VER DATOS GUARDADOS</string>
+    <string name="btn_ver_historial">VER HISTORIAL</string>
+
+    <!-- Sincronización -->
+    <string name="sync_sincronizando">Sincronizando tareas…</string>
+    <string name="desc_cerrar_sync_banner">Cerrar banner de sincronización</string>
 </resources>

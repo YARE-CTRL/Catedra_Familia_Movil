@@ -71,7 +71,7 @@
             <!-- Botón de acción -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_accion"
-                style="@style/Widget.Material3.Button.TonalButton"
+                style="@style/CustomTonalButton"
                 android:layout_width="wrap_content"
                 android:layout_height="32dp"
                 android:text="VER TAREA"

@@ -57,7 +57,7 @@
         <!-- Botón Saltar/Atrás -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSkip"
-            style="@style/Widget.Material3.Button.TextButton"
+            style="@style/CustomTextButton"
             android:layout_width="0dp"
             android:layout_height="56dp"
             android:layout_weight="1"
@@ -70,7 +70,7 @@
         <!-- Botón Siguiente/Comenzar -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnNext"
-            style="@style/Widget.Material3.Button"
+            style="@style/CustomButton"
             android:layout_width="0dp"
             android:layout_height="56dp"
             android:layout_weight="1"

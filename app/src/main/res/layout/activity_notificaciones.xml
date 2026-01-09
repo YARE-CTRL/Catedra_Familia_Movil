@@ -97,7 +97,7 @@
         <!-- Botón eliminar leídas -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_eliminar_leidas"
-            style="@style/Widget.Material3.Button.TextButton"
+            style="@style/CustomTextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"

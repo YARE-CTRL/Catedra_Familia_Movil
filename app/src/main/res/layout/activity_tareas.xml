@@ -52,40 +52,32 @@
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chip_todas"
-                    style="@style/Widget.Material3.Chip.Filter"
+                    style="@style/CustomChipStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Todas"
-                    android:checked="true"
-                    app:chipBackgroundColor="@color/chip_background_selector"
-                    app:checkedIconVisible="false" />
+                    android:checked="true" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chip_pendientes"
-                    style="@style/Widget.Material3.Chip.Filter"
+                    style="@style/CustomChipStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Pendientes"
-                    app:chipBackgroundColor="@color/chip_background_selector"
-                    app:checkedIconVisible="false" />
+                    android:text="Pendientes" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chip_completadas"
-                    style="@style/Widget.Material3.Chip.Filter"
+                    style="@style/CustomChipStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Completadas"
-                    app:chipBackgroundColor="@color/chip_background_selector"
-                    app:checkedIconVisible="false" />
+                    android:text="Completadas" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chip_calificadas"
-                    style="@style/Widget.Material3.Chip.Filter"
+                    style="@style/CustomChipStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Calificadas"
-                    app:chipBackgroundColor="@color/chip_background_selector"
-                    app:checkedIconVisible="false" />
+                    android:text="Calificadas" />
 
             </com.google.android.material.chip.ChipGroup>
 
