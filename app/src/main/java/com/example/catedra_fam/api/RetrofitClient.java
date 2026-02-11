@@ -20,7 +20,7 @@ public class RetrofitClient {
      * @param context Contexto de la aplicación
      * @return ApiService configurado
      */
-    public static ApiService getApiService(Context context) {
+    public static synchronized ApiService getApiService(Context context) {
         if (apiService == null) {
             retrofit = getRetrofitInstance(context);
             apiService = retrofit.create(ApiService.class);
@@ -31,7 +31,7 @@ public class RetrofitClient {
     /**
      * Crea la instancia de Retrofit con todas las configuraciones
      */
-    private static Retrofit getRetrofitInstance(Context context) {
+    private static synchronized Retrofit getRetrofitInstance(Context context) {
         if (retrofit == null) {
             // Logging interceptor para debugging
             HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();

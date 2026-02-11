@@ -168,36 +168,6 @@ public class LoginActivity extends AppCompatActivity {
         Log.d(TAG, "Token guardado exitosamente");
     }
 
-    private boolean validarCampos(String correo, String contrasena) {
-        // Validar correo
-        if (TextUtils.isEmpty(correo)) {
-            etCorreo.setError(getString(R.string.campo_vacio));
-            etCorreo.requestFocus();
-            return false;
-        }
-
-        if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) {
-            etCorreo.setError(getString(R.string.email_invalido));
-            etCorreo.requestFocus();
-            return false;
-        }
-
-        // Validar contraseña
-        if (TextUtils.isEmpty(contrasena)) {
-            etContrasena.setError(getString(R.string.campo_vacio));
-            etContrasena.requestFocus();
-            return false;
-        }
-
-        if (contrasena.length() < 8) {
-            etContrasena.setError(getString(R.string.contrasena_corta));
-            etContrasena.requestFocus();
-            return false;
-        }
-
-        return true;
-    }
-
     private void loginExitoso(String documento, LoginResponse loginResponse) {
         // Guardar credenciales si "Recordar sesión" está marcado
         if (cbRecordar.isChecked()) {
@@ -226,9 +196,18 @@ public class LoginActivity extends AppCompatActivity {
             finish();
         } else {
             // Ir al dashboard (MainActivity)
-            String nombreUsuario = loginResponse.getUser().getFirstName() + " " + 
-                                  loginResponse.getUser().getLastName();
-            Toast.makeText(this, "¡Bienvenido " + nombreUsuario + "!", Toast.LENGTH_SHORT).show();
+            String firstName = loginResponse.getUser().getFirstName() != null ? 
+                              loginResponse.getUser().getFirstName() : "";
+            String lastName = loginResponse.getUser().getLastName() != null ? 
+                             loginResponse.getUser().getLastName() : "";
+            String nombreUsuario = (firstName + " " + lastName).trim();
+            
+            if (!nombreUsuario.isEmpty()) {
+                Toast.makeText(this, "¡Bienvenido " + nombreUsuario + "!", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "¡Bienvenido!", Toast.LENGTH_SHORT).show();
+            }
+            
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
             finish();
