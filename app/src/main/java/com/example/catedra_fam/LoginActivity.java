@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.CheckBox;
@@ -13,10 +14,18 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import com.example.catedra_fam.api.ApiService;
+import com.example.catedra_fam.api.LoginRequest;
+import com.example.catedra_fam.api.LoginResponse;
+import com.example.catedra_fam.api.RetrofitClient;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
+    private static final String TAG = "LoginActivity";
 
     private TextInputEditText etCorreo, etContrasena;
     private CheckBox cbRecordar;
@@ -29,6 +38,7 @@ public class LoginActivity extends AppCompatActivity {
     private static final String PREFS_NAME = "CatedraFamiliaPrefs";
     private static final String KEY_CORREO = "correo";
     private static final String KEY_RECORDAR = "recordar_sesion";
+    private static final String KEY_TOKEN = "auth_token";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,76 +96,83 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void intentarLogin() {
-        // ============================================
-        // MODO DESARROLLO - SIN VALIDACIONES
-        // ============================================
-        // Para desarrollo, ir directo a MainActivity
-        // sin validar credenciales
+        // Obtener documento y contraseña
+        String documento = etCorreo.getText().toString().trim();
+        String password = etContrasena.getText().toString().trim();
 
-        Toast.makeText(this, "¡Bienvenido! (Modo desarrollo)", Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-        startActivity(intent);
-        finish();
+        // Validaciones básicas
+        if (TextUtils.isEmpty(documento)) {
+            etCorreo.setError("El documento es requerido");
+            etCorreo.requestFocus();
+            return;
+        }
 
-        /* CÓDIGO ORIGINAL CON VALIDACIONES (comentado para desarrollo)
-
-        String correo = etCorreo.getText().toString().trim();
-        String contrasena = etContrasena.getText().toString().trim();
-
-        // Validaciones
-        if (!validarCampos(correo, contrasena)) {
+        if (TextUtils.isEmpty(password)) {
+            etContrasena.setError("La contraseña es requerida");
+            etContrasena.requestFocus();
             return;
         }
 
         // Mostrar loading
         mostrarLoading(true);
 
-        // Simular llamada a API (2 segundos)
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            // Simular login exitoso
-            loginExitoso(correo);
-        }, 2000);
+        // Crear request de login
+        LoginRequest loginRequest = new LoginRequest(documento, password);
 
-        */
+        // Obtener ApiService y hacer la llamada
+        ApiService apiService = RetrofitClient.getApiService(this);
+        Call<LoginResponse> call = apiService.loginMovil(loginRequest);
+
+        call.enqueue(new Callback<LoginResponse>() {
+            @Override
+            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                mostrarLoading(false);
+
+                if (response.isSuccessful() && response.body() != null) {
+                    LoginResponse loginResponse = response.body();
+                    
+                    if (loginResponse.isSuccess() && loginResponse.getToken() != null) {
+                        // Login exitoso
+                        Log.d(TAG, "Login exitoso: " + loginResponse.getUser().getFirstName());
+                        guardarToken(loginResponse.getToken());
+                        loginExitoso(documento, loginResponse);
+                    } else {
+                        // Error en la respuesta
+                        String mensaje = loginResponse.getMessage() != null ? 
+                            loginResponse.getMessage() : "Error al iniciar sesión";
+                        Toast.makeText(LoginActivity.this, mensaje, Toast.LENGTH_LONG).show();
+                        Log.e(TAG, "Error de login: " + mensaje);
+                    }
+                } else {
+                    // Error HTTP
+                    String errorMsg = "Error al conectar con el servidor (Código: " + response.code() + ")";
+                    Toast.makeText(LoginActivity.this, errorMsg, Toast.LENGTH_LONG).show();
+                    Log.e(TAG, errorMsg);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<LoginResponse> call, Throwable t) {
+                mostrarLoading(false);
+                String errorMsg = "Error de conexión: " + t.getMessage();
+                Toast.makeText(LoginActivity.this, errorMsg, Toast.LENGTH_LONG).show();
+                Log.e(TAG, "Error de conexión", t);
+            }
+        });
     }
 
-    private boolean validarCampos(String correo, String contrasena) {
-        // Validar correo
-        if (TextUtils.isEmpty(correo)) {
-            etCorreo.setError(getString(R.string.campo_vacio));
-            etCorreo.requestFocus();
-            return false;
-        }
-
-        if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) {
-            etCorreo.setError(getString(R.string.email_invalido));
-            etCorreo.requestFocus();
-            return false;
-        }
-
-        // Validar contraseña
-        if (TextUtils.isEmpty(contrasena)) {
-            etContrasena.setError(getString(R.string.campo_vacio));
-            etContrasena.requestFocus();
-            return false;
-        }
-
-        if (contrasena.length() < 8) {
-            etContrasena.setError(getString(R.string.contrasena_corta));
-            etContrasena.requestFocus();
-            return false;
-        }
-
-        return true;
+    private void guardarToken(String token) {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(KEY_TOKEN, token);
+        editor.apply();
+        Log.d(TAG, "Token guardado exitosamente");
     }
 
-    private void loginExitoso(String correo) {
-        mostrarLoading(false);
-
+    private void loginExitoso(String documento, LoginResponse loginResponse) {
         // Guardar credenciales si "Recordar sesión" está marcado
         if (cbRecordar.isChecked()) {
             SharedPreferences.Editor editor = prefs.edit();
-            editor.putString(KEY_CORREO, correo);
+            editor.putString(KEY_CORREO, documento);
             editor.putBoolean(KEY_RECORDAR, true);
             editor.apply();
         } else {
@@ -166,20 +183,31 @@ public class LoginActivity extends AppCompatActivity {
             editor.apply();
         }
 
-        // Simular detección de primer ingreso (debe_cambiar_contrasena)
-        // En un caso real, esto vendría del backend
-        boolean debeCambiarContrasena = correo.contains("nuevo");
+        // Verificar si debe cambiar contraseña
+        boolean debeCambiarContrasena = loginResponse.getUser() != null && 
+                                        loginResponse.getUser().isMustChangePassword();
 
         if (debeCambiarContrasena) {
             // Redirigir a cambiar contraseña obligatorio
             Intent intent = new Intent(LoginActivity.this, CambiarContrasenaActivity.class);
             intent.putExtra("ES_OBLIGATORIO", true);
-            intent.putExtra("CORREO", correo);
+            intent.putExtra("CORREO", documento);
             startActivity(intent);
             finish();
         } else {
-            // Ir al dashboard (MainActivity demo)
-            Toast.makeText(this, "¡Bienvenido!", Toast.LENGTH_SHORT).show();
+            // Ir al dashboard (MainActivity)
+            String firstName = loginResponse.getUser().getFirstName() != null ? 
+                              loginResponse.getUser().getFirstName() : "";
+            String lastName = loginResponse.getUser().getLastName() != null ? 
+                             loginResponse.getUser().getLastName() : "";
+            String nombreUsuario = (firstName + " " + lastName).trim();
+            
+            if (!nombreUsuario.isEmpty()) {
+                Toast.makeText(this, "¡Bienvenido " + nombreUsuario + "!", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "¡Bienvenido!", Toast.LENGTH_SHORT).show();
+            }
+            
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
             finish();
