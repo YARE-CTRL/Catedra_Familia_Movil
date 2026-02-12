@@ -2,6 +2,7 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/gray_50">
@@ -77,10 +78,11 @@
                             android:id="@+id/tv_frecuencia"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Semanal"
+                            android:text=""
                             android:textColor="@color/gray_900"
                             android:textStyle="bold"
-                            android:textSize="14sp" />
+                            android:textSize="14sp"
+                            tools:text="Semanal" />
 
                     </LinearLayout>
 
@@ -102,10 +104,11 @@
                             android:id="@+id/tv_fecha_vencimiento"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="29 Nov 2026"
+                            android:text=""
                             android:textColor="@color/gray_900"
                             android:textStyle="bold"
-                            android:textSize="14sp" />
+                            android:textSize="14sp"
+                            tools:text="29 Nov 2026" />
 
                     </LinearLayout>
 
@@ -126,10 +129,11 @@
                             android:id="@+id/tv_para_boletin"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Sí"
+                            android:text=""
                             android:textColor="@color/secondary"
                             android:textStyle="bold"
-                            android:textSize="14sp" />
+                            android:textSize="14sp"
+                            tools:text="Sí" />
 
                     </LinearLayout>
 
@@ -179,10 +183,11 @@
                         android:id="@+id/tv_descripcion"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Descripción de la tarea..."
+                        android:text=""
                         android:textColor="@color/gray_900"
                         android:textSize="15sp"
-                        android:lineSpacingExtra="4dp" />
+                        android:lineSpacingExtra="4dp"
+                        tools:text="Descripción de la tarea..." />
 
                 </LinearLayout>
 
@@ -346,10 +351,11 @@
                             android:id="@+id/tv_nota"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Alto (4.5)"
+                            android:text=""
                             android:textColor="@color/secondary"
                             android:textStyle="bold"
-                            android:textSize="18sp" />
+                            android:textSize="18sp"
+                            tools:text="Alto (4.5)" />
 
                     </LinearLayout>
 
@@ -366,12 +372,13 @@
                         android:id="@+id/tv_feedback"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Excelente trabajo en familia..."
+                        android:text=""
                         android:textColor="@color/gray_900"
                         android:textSize="14sp"
                         android:lineSpacingExtra="2dp"
                         android:background="@color/gray_50"
-                        android:padding="12dp" />
+                        android:padding="12dp"
+                        tools:text="Excelente trabajo en familia..." />
 
                 </LinearLayout>
 

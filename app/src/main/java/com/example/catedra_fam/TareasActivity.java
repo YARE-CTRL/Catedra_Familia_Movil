@@ -13,12 +13,20 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.catedra_fam.adapters.TareasAdapter;
+import com.example.catedra_fam.api.ApiService;
+import com.example.catedra_fam.api.RetrofitClient;
+import com.example.catedra_fam.models.ApiResponse;
+import com.example.catedra_fam.models.TareaLista;
 import com.example.catedra_fam.models.Tarea;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class TareasActivity extends AppCompatActivity implements TareasAdapter.OnTareaClickListener {
 
@@ -32,6 +40,7 @@ public class TareasActivity extends AppCompatActivity implements TareasAdapter.O
     private TareasAdapter tareasAdapter;
     private List<Tarea> listaTareas;
     private List<Tarea> listaOriginal;
+    private ApiService apiService;
 
     private int estudianteId;
     private String estudianteNombre;
@@ -50,11 +59,13 @@ public class TareasActivity extends AppCompatActivity implements TareasAdapter.O
         if (estudianteNombre == null) estudianteNombre = "Estudiante";
         if (estudianteCurso == null) estudianteCurso = "";
 
+        apiService = RetrofitClient.getApiService(this);
+
         initViews();
         setupToolbar();
         setupRecyclerView();
         setupListeners();
-        loadMockData();
+        cargarTareas();
     }
 
     private void initViews() {
@@ -73,7 +84,7 @@ public class TareasActivity extends AppCompatActivity implements TareasAdapter.O
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("Tareas de " + estudianteNombre);
-            getSupportActionBar().setSubtitle(estudianteCurso + " - Periodo 1");
+            getSupportActionBar().setSubtitle(estudianteCurso);
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
@@ -92,13 +103,7 @@ public class TareasActivity extends AppCompatActivity implements TareasAdapter.O
     private void setupListeners() {
         // SwipeRefresh
         swipeRefresh.setColorSchemeResources(R.color.primary, R.color.secondary, R.color.accent);
-        swipeRefresh.setOnRefreshListener(() -> {
-            // Simular recarga
-            swipeRefresh.postDelayed(() -> {
-                swipeRefresh.setRefreshing(false);
-                Toast.makeText(this, "Tareas actualizadas", Toast.LENGTH_SHORT).show();
-            }, 1500);
-        });
+        swipeRefresh.setOnRefreshListener(this::cargarTareas);
 
         // Filtros con chips
         chipGroupFiltros.setOnCheckedStateChangeListener((group, checkedIds) -> {
@@ -153,85 +158,84 @@ public class TareasActivity extends AppCompatActivity implements TareasAdapter.O
         }
     }
 
-    private void loadMockData() {
+    // Definir tipo para evitar problemas con genéricos anidados
+    private interface TareasCallback extends Callback<ApiResponse<List<TareaLista>>> {}
+
+    private void cargarTareas() {
+        swipeRefresh.setRefreshing(true);
+        
+        apiService.getTareas(estudianteId, null).enqueue(new TareasCallback() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<TareaLista>>> call,
+                                   Response<ApiResponse<List<TareaLista>>> response) {
+                swipeRefresh.setRefreshing(false);
+                
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse<List<TareaLista>> apiResponse = response.body();
+
+                    if (apiResponse.isSuccess()) {
+                        List<TareaLista> tareas = apiResponse.getData();
+
+                        // Convertir TareaLista -> Tarea
+                        listaTareas.clear();
+                        listaOriginal.clear();
+                        for (TareaLista tareaLista : tareas) {
+                            Tarea tarea = convertirTareaListaATarea(tareaLista);
+                            listaTareas.add(tarea);
+                            listaOriginal.add(tarea);
+                        }
+                        
+                        tareasAdapter.notifyDataSetChanged();
+                        actualizarEstadoVacio();
+                    } else {
+                        Toast.makeText(TareasActivity.this, "Error al cargar tareas: " + apiResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                        mostrarEstadoVacioConError("No se pudieron cargar las tareas");
+                    }
+                } else {
+                    Toast.makeText(TareasActivity.this, "Error en el servidor: " + response.code(), Toast.LENGTH_SHORT).show();
+                    mostrarEstadoVacioConError("Error del servidor");
+                }
+            }
+            
+            @Override
+            public void onFailure(Call<ApiResponse<List<TareaLista>>> call, Throwable t) {
+                swipeRefresh.setRefreshing(false);
+                Toast.makeText(TareasActivity.this, "Error de conexión: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                mostrarEstadoVacioConError("Sin conexión a internet");
+            }
+        });
+    }
+
+    private void mostrarEstadoVacioConError(String mensaje) {
+        listaTareas.clear();
         listaOriginal.clear();
-
-        // Tarea 1 - Vencida
-        Tarea t1 = new Tarea();
-        t1.setId(1);
-        t1.setTitulo("Juego de mesa familiar");
-        t1.setDescripcion("Jueguen en familia durante 30 minutos. Puede ser dominó, cartas, parqués, etc.");
-        t1.setFrecuencia("Quincenal");
-        t1.setFechaVencimiento("5 Enero");
-        t1.setEstado("vencida");
-        t1.setIncluyeEnBoletin(true);
-
-        // Tarea 2 - Próxima a vencer
-        Tarea t2 = new Tarea();
-        t2.setId(2);
-        t2.setTitulo("Lectura en familia");
-        t2.setDescripcion("Lean juntos un cuento o libro durante 20 minutos. Conversen sobre qué aprendieron.");
-        t2.setFrecuencia("Semanal");
-        t2.setFechaVencimiento("10 Enero");
-        t2.setEstado("proxima");
-        t2.setIncluyeEnBoletin(true);
-
-        // Tarea 3 - Pendiente normal
-        Tarea t3 = new Tarea();
-        t3.setId(3);
-        t3.setTitulo("Receta familiar");
-        t3.setDescripcion("Preparen juntos una receta tradicional de la familia.");
-        t3.setFrecuencia("Mensual");
-        t3.setFechaVencimiento("20 Enero");
-        t3.setEstado("pendiente");
-        t3.setIncluyeEnBoletin(true);
-
-        // Tarea 4 - Completada (en revisión)
-        Tarea t4 = new Tarea();
-        t4.setId(4);
-        t4.setTitulo("Conversación sobre valores");
-        t4.setDescripcion("Dialoguen sobre un valor importante: respeto, honestidad, responsabilidad.");
-        t4.setFrecuencia("Semanal");
-        t4.setFechaVencimiento("3 Enero");
-        t4.setEstado("completada");
-        t4.setIncluyeEnBoletin(true);
-
-        // Tarea 5 - Calificada
-        Tarea t5 = new Tarea();
-        t5.setId(5);
-        t5.setTitulo("Árbol genealógico");
-        t5.setDescripcion("Construyan juntos el árbol genealógico de la familia.");
-        t5.setFrecuencia("Única");
-        t5.setFechaVencimiento("28 Dic");
-        t5.setEstado("calificada");
-        t5.setNota("Alto (4.5)");
-        t5.setFeedback("Excelente trabajo. El árbol está muy completo y creativo.");
-        t5.setIncluyeEnBoletin(true);
-
-        // Tarea 6 - Calificada
-        Tarea t6 = new Tarea();
-        t6.setId(6);
-        t6.setTitulo("Paseo en familia");
-        t6.setDescripcion("Realicen un paseo familiar al parque o lugar cercano.");
-        t6.setFrecuencia("Quincenal");
-        t6.setFechaVencimiento("20 Dic");
-        t6.setEstado("calificada");
-        t6.setNota("Superior (4.8)");
-        t6.setFeedback("Las fotos muestran un momento muy bonito en familia.");
-        t6.setIncluyeEnBoletin(true);
-
-        listaOriginal.add(t1);
-        listaOriginal.add(t2);
-        listaOriginal.add(t3);
-        listaOriginal.add(t4);
-        listaOriginal.add(t5);
-        listaOriginal.add(t6);
-
-        // Mostrar todas inicialmente
-        listaTareas.addAll(listaOriginal);
         tareasAdapter.notifyDataSetChanged();
+        actualizarContadores();
+        actualizarEstadoVacio();
+        Toast.makeText(this, mensaje, Toast.LENGTH_SHORT).show();
+    }
 
-        // Actualizar contador en chips
+    private Tarea convertirTareaListaATarea(TareaLista tareaLista) {
+        Tarea tarea = new Tarea();
+        tarea.setId(tareaLista.getId());
+        tarea.setTitulo(tareaLista.getTitulo());
+        tarea.setCategoria(tareaLista.getCategoria());
+        tarea.setFrecuencia(tareaLista.getFrecuencia());
+        tarea.setFechaVencimiento(tareaLista.getFechaVencimiento());
+        tarea.setEstado(tareaLista.getEstado());
+
+        // Campos específicos del nuevo modelo
+        tarea.setFechaPublicacion(tareaLista.getFechaPublicacion());
+        tarea.setDiasRestantes(tareaLista.getDiasRestantes());
+
+        // Determinar si incluye en boletín basado en el estado/categoria
+        tarea.setIncluyeEnBoletin(!"unica".equals(tareaLista.getFrecuencia()));
+
+        return tarea;
+    }
+
+
+    private void actualizarContadores() {
         int pendientes = 0, completadas = 0, calificadas = 0;
         for (Tarea t : listaOriginal) {
             switch (t.getEstado()) {
@@ -253,6 +257,16 @@ public class TareasActivity extends AppCompatActivity implements TareasAdapter.O
         chipPendientes.setText("Pendientes (" + pendientes + ")");
         chipCompletadas.setText("Completadas (" + completadas + ")");
         chipCalificadas.setText("Calificadas (" + calificadas + ")");
+    }
+
+    private void actualizarEstadoVacio() {
+        if (listaTareas.isEmpty()) {
+            llEstadoVacio.setVisibility(View.VISIBLE);
+            rvTareas.setVisibility(View.GONE);
+        } else {
+            llEstadoVacio.setVisibility(View.GONE);
+            rvTareas.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
@@ -280,4 +294,3 @@ public class TareasActivity extends AppCompatActivity implements TareasAdapter.O
         startActivity(intent);
     }
 }
-

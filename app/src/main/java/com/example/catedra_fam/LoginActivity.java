@@ -1,24 +1,40 @@
 package com.example.catedra_fam;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.TextUtils;
-import android.util.Patterns;
+import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import com.example.catedra_fam.api.ApiService;
+import com.example.catedra_fam.api.RetrofitClient;
+import com.example.catedra_fam.models.ApiResponse;
+import com.example.catedra_fam.models.LoginRequest;
+import com.example.catedra_fam.models.LoginResponse;
+import com.example.catedra_fam.models.DeviceInfo;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private TextInputEditText etCorreo, etContrasena;
+    // Constante para solicitud de permiso de notificaciones
+    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1002;
+
+    private TextInputEditText etDocumento, etContrasena;
     private CheckBox cbRecordar;
     private MaterialButton btnIngresar, btnAyuda;
     private TextView tvOlvidasteContrasena;
@@ -26,33 +42,32 @@ public class LoginActivity extends AppCompatActivity {
     private View llBannerOffline;
 
     private SharedPreferences prefs;
-    private static final String PREFS_NAME = "CatedraFamiliaPrefs";
-    private static final String KEY_CORREO = "correo";
+    private ApiService apiService;
+
+    private static final String PREFS_NAME = "AppPrefs";
+    private static final String KEY_DOCUMENTO = "numero_documento";
     private static final String KEY_RECORDAR = "recordar_sesion";
+    private static final String KEY_TOKEN = "AUTH_TOKEN";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // Inicializar SharedPreferences
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        apiService = RetrofitClient.getApiService(this);
 
-        // Inicializar vistas
         initViews();
-
-        // Cargar credenciales guardadas si existe
         cargarCredencialesGuardadas();
-
-        // Configurar listeners
         setupListeners();
-
-        // Verificar conectividad (simulado)
         verificarConectividad();
+        
+        // 🔥 Solicitar permiso de notificaciones para Android 13+
+        solicitarPermisoNotificaciones();
     }
 
     private void initViews() {
-        etCorreo = findViewById(R.id.et_correo);
+        etDocumento = findViewById(R.id.et_documento);
         etContrasena = findViewById(R.id.et_contrasena);
         cbRecordar = findViewById(R.id.cb_recordar);
         btnIngresar = findViewById(R.id.btn_ingresar);
@@ -79,69 +94,141 @@ public class LoginActivity extends AppCompatActivity {
     private void cargarCredencialesGuardadas() {
         boolean recordar = prefs.getBoolean(KEY_RECORDAR, false);
         if (recordar) {
-            String correoGuardado = prefs.getString(KEY_CORREO, "");
-            etCorreo.setText(correoGuardado);
+            String documentoGuardado = prefs.getString(KEY_DOCUMENTO, "");
+            etDocumento.setText(documentoGuardado);
             cbRecordar.setChecked(true);
         }
     }
 
     private void intentarLogin() {
-        // ============================================
-        // MODO DESARROLLO - SIN VALIDACIONES
-        // ============================================
-        // Para desarrollo, ir directo a MainActivity
-        // sin validar credenciales
-
-        Toast.makeText(this, "¡Bienvenido! (Modo desarrollo)", Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-        startActivity(intent);
-        finish();
-
-        /* CÓDIGO ORIGINAL CON VALIDACIONES (comentado para desarrollo)
-
-        String correo = etCorreo.getText().toString().trim();
+        String documento = etDocumento.getText().toString().trim();
         String contrasena = etContrasena.getText().toString().trim();
-
-        // Validaciones
-        if (!validarCampos(correo, contrasena)) {
+        
+        if (!validarCampos(documento, contrasena)) {
             return;
         }
-
-        // Mostrar loading
+        
         mostrarLoading(true);
-
-        // Simular llamada a API (2 segundos)
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            // Simular login exitoso
-            loginExitoso(correo);
-        }, 2000);
-
-        */
+        
+        // DEBUG: Mostrar credenciales en LogCat
+        Log.d("LoginActivity", "Intentando login con:");
+        Log.d("LoginActivity", "Documento: " + documento);
+        Log.d("LoginActivity", "Contraseña: " + contrasena);
+        
+        LoginRequest request = new LoginRequest(documento, contrasena);
+        
+        apiService.login(request).enqueue(new Callback<LoginResponse>() {
+            @Override
+            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                mostrarLoading(false);
+                
+                if (response.isSuccessful() && response.body() != null) {
+                    LoginResponse loginResponse = response.body();
+                    
+                    if (loginResponse.isSuccess()) {
+                        guardarSesion(loginResponse, documento);
+                        
+                        // Guardar estudiantes del login si existen
+                        if (loginResponse.getEstudiantes() != null && !loginResponse.getEstudiantes().isEmpty()) {
+                            guardarEstudiantesLogin(loginResponse.getEstudiantes());
+                        }
+                        
+                        loginExitoso(loginResponse.getUser().getNombreCompleto());
+                    } else {
+                        Toast.makeText(LoginActivity.this, "Credenciales incorrectas", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    // Manejar error HTTP
+                    String errorMsg = "Error en el servidor";
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorBody = response.errorBody().string();
+                            errorMsg = "Error: " + response.code() + " - " + errorBody;
+                        }
+                    } catch (Exception e) {
+                        errorMsg = "Error: " + response.code();
+                    }
+                    Toast.makeText(LoginActivity.this, errorMsg, Toast.LENGTH_LONG).show();
+                }
+            }
+            
+            @Override
+            public void onFailure(Call<LoginResponse> call, Throwable t) {
+                mostrarLoading(false);
+                String errorMsg = "Error de conexión";
+                if (t.getMessage() != null) {
+                    errorMsg = "Error de conexión: " + t.getMessage();
+                }
+                Toast.makeText(LoginActivity.this, errorMsg, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
-    private boolean validarCampos(String correo, String contrasena) {
-        // Validar correo
-        if (TextUtils.isEmpty(correo)) {
-            etCorreo.setError(getString(R.string.campo_vacio));
-            etCorreo.requestFocus();
+    private void guardarSesion(LoginResponse loginData, String documento) {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(KEY_TOKEN, loginData.getToken());
+
+        if (loginData.getUser() != null) {
+            editor.putInt("acudiente_id", loginData.getUser().getId());
+            editor.putString("nombre_usuario", loginData.getUser().getNombreCompleto());
+            editor.putString("correo_usuario", loginData.getUser().getEmail());
+        }
+
+        if (cbRecordar.isChecked()) {
+            editor.putString(KEY_DOCUMENTO, documento);
+            editor.putBoolean(KEY_RECORDAR, true);
+        } else {
+            editor.remove(KEY_DOCUMENTO);
+            editor.putBoolean(KEY_RECORDAR, false);
+        }
+
+        editor.apply();
+    }
+
+    private void guardarEstudiantesLogin(java.util.List<LoginResponse.EstudianteLogin> estudiantes) {
+        // Guardar información de estudiantes para uso offline
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putInt("estudiantes_count", estudiantes.size());
+        
+        for (int i = 0; i < estudiantes.size(); i++) {
+            LoginResponse.EstudianteLogin est = estudiantes.get(i);
+            String prefix = "estudiante_" + i + "_";
+            editor.putInt(prefix + "id", est.getId());
+            editor.putString(prefix + "nombre", est.getFirstName());
+            editor.putString(prefix + "apellido", est.getLastName());
+            editor.putString(prefix + "nombre_completo", est.getNombreCompleto());
+            
+            if (est.getCurso() != null) {
+                editor.putString(prefix + "curso_nombre", est.getCurso().getName());
+                editor.putString(prefix + "curso_grado", est.getCurso().getGrado());
+                editor.putString(prefix + "curso_jornada", est.getCurso().getJornada());
+            }
+        }
+        
+        editor.apply();
+    }
+
+    private boolean validarCampos(String documento, String contrasena) {
+        if (TextUtils.isEmpty(documento)) {
+            etDocumento.setError("El número de documento es obligatorio");
+            etDocumento.requestFocus();
             return false;
         }
 
-        if (!Patterns.EMAIL_ADDRESS.matcher(correo).matches()) {
-            etCorreo.setError(getString(R.string.email_invalido));
-            etCorreo.requestFocus();
+        if (documento.length() < 6) {
+            etDocumento.setError("Número de documento inválido (mínimo 6 dígitos)");
+            etDocumento.requestFocus();
             return false;
         }
 
-        // Validar contraseña
         if (TextUtils.isEmpty(contrasena)) {
-            etContrasena.setError(getString(R.string.campo_vacio));
+            etContrasena.setError("La contraseña es obligatoria");
             etContrasena.requestFocus();
             return false;
         }
 
         if (contrasena.length() < 8) {
-            etContrasena.setError(getString(R.string.contrasena_corta));
+            etContrasena.setError("Contraseña debe tener al menos 8 caracteres");
             etContrasena.requestFocus();
             return false;
         }
@@ -149,40 +236,55 @@ public class LoginActivity extends AppCompatActivity {
         return true;
     }
 
-    private void loginExitoso(String correo) {
-        mostrarLoading(false);
+    private void loginExitoso(String nombreAcudiente) {
+        Toast.makeText(this, "¡Bienvenido " + nombreAcudiente + "!", Toast.LENGTH_SHORT).show();
+        
+        // Registrar token FCM después del login exitoso
+        registrarFCMTokenDespuesDeLogin();
+        
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        startActivity(intent);
+        finish();
+    }
 
-        // Guardar credenciales si "Recordar sesión" está marcado
-        if (cbRecordar.isChecked()) {
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putString(KEY_CORREO, correo);
-            editor.putBoolean(KEY_RECORDAR, true);
-            editor.apply();
-        } else {
-            // Limpiar credenciales guardadas
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.remove(KEY_CORREO);
-            editor.putBoolean(KEY_RECORDAR, false);
-            editor.apply();
-        }
-
-        // Simular detección de primer ingreso (debe_cambiar_contrasena)
-        // En un caso real, esto vendría del backend
-        boolean debeCambiarContrasena = correo.contains("nuevo");
-
-        if (debeCambiarContrasena) {
-            // Redirigir a cambiar contraseña obligatorio
-            Intent intent = new Intent(LoginActivity.this, CambiarContrasenaActivity.class);
-            intent.putExtra("ES_OBLIGATORIO", true);
-            intent.putExtra("CORREO", correo);
-            startActivity(intent);
-            finish();
-        } else {
-            // Ir al dashboard (MainActivity demo)
-            Toast.makeText(this, "¡Bienvenido!", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-            startActivity(intent);
-            finish();
+    private void registrarFCMTokenDespuesDeLogin() {
+        // Obtener token FCM guardado
+        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        String fcmToken = prefs.getString("FCM_TOKEN", null);
+        
+        if (fcmToken != null) {
+            // 📱 MOSTRAR TOKEN EN LOGIN - PARA DESARROLLO
+            Log.d("TOKEN_FCM_COPIAR", "====================================");
+            Log.d("TOKEN_FCM_COPIAR", "TOKEN FCM DESPUÉS DE LOGIN:");
+            Log.d("TOKEN_FCM_COPIAR", fcmToken);
+            Log.d("TOKEN_FCM_COPIAR", "====================================");
+            
+            // Crear información del dispositivo
+            DeviceInfo deviceInfo = new DeviceInfo(
+                fcmToken,
+                "android",
+                "1.0", // Versión hardcoded temporalmente
+                android.os.Build.MODEL,
+                android.os.Build.VERSION.RELEASE
+            );
+            
+            // Registrar token en backend
+            apiService.registerFCMToken("Bearer " + prefs.getString("AUTH_TOKEN", ""), deviceInfo)
+                .enqueue(new retrofit2.Callback<Void>() {
+                    @Override
+                    public void onResponse(retrofit2.Call<Void> call, retrofit2.Response<Void> response) {
+                        if (response.isSuccessful()) {
+                            android.util.Log.d("LoginActivity", "FCM Token registrado exitosamente");
+                        } else {
+                            android.util.Log.e("LoginActivity", "Error registrando FCM token: " + response.code());
+                        }
+                    }
+                    
+                    @Override
+                    public void onFailure(retrofit2.Call<Void> call, Throwable t) {
+                        android.util.Log.e("LoginActivity", "Error de red registrando FCM token", t);
+                    }
+                });
         }
     }
 
@@ -190,23 +292,89 @@ public class LoginActivity extends AppCompatActivity {
         if (mostrar) {
             pbLoading.setVisibility(View.VISIBLE);
             btnIngresar.setEnabled(false);
-            btnIngresar.setText(R.string.iniciando_sesion);
         } else {
             pbLoading.setVisibility(View.GONE);
             btnIngresar.setEnabled(true);
-            btnIngresar.setText(R.string.btn_ingresar);
         }
     }
 
     private void verificarConectividad() {
-        // Simulación: mostrar banner offline al azar
-        // En producción, usar ConnectivityManager
-        boolean hayConexion = true; // Cambiar a false para probar
+        // Ocultar banner offline por defecto
+        llBannerOffline.setVisibility(View.GONE);
+    }
 
-        if (!hayConexion) {
-            llBannerOffline.setVisibility(View.VISIBLE);
+    /**
+     * 🔥 Solicita permiso de notificaciones para Android 13+ (API 33+)
+     * Este método es CRÍTICO para que las notificaciones funcionen en Android 13+
+     */
+    private void solicitarPermisoNotificaciones() {
+        // Solo para Android 13+ (API 33+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Verificar si el permiso ya está concedido
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) 
+                != PackageManager.PERMISSION_GRANTED) {
+                
+                Log.d("LoginActivity", "Solicitando permiso de notificaciones para Android 13+");
+                
+                // Mostrar explicación (opcional pero recomendado)
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, 
+                    Manifest.permission.POST_NOTIFICATIONS)) {
+                    
+                    // Mostrar diálogo explicativo
+                    new androidx.appcompat.app.AlertDialog.Builder(this)
+                        .setTitle("Permiso de Notificaciones Requerido")
+                        .setMessage("Para recibir alertas importantes sobre tareas y eventos de tus hijos, necesitamos tu permiso para enviar notificaciones.")
+                        .setPositiveButton("Conceder", (dialog, which) -> {
+                            // Solicitar permiso
+                            ActivityCompat.requestPermissions(
+                                this,
+                                new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                                NOTIFICATION_PERMISSION_REQUEST_CODE
+                            );
+                        })
+                        .setNegativeButton("Cancelar", (dialog, which) -> {
+                            Log.w("LoginActivity", "Usuario denegó permiso de notificaciones");
+                            Toast.makeText(this, "No podrás recibir notificaciones importantes", Toast.LENGTH_LONG).show();
+                        })
+                        .show();
+                } else {
+                    // Solicitar permiso directamente (sin explicación)
+                    ActivityCompat.requestPermissions(
+                        this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        NOTIFICATION_PERMISSION_REQUEST_CODE
+                    );
+                }
+            } else {
+                Log.d("LoginActivity", "Permiso de notificaciones ya concedido");
+            }
         } else {
-            llBannerOffline.setVisibility(View.GONE);
+            // Para Android < 13, el permiso no se solicita en runtime
+            Log.d("LoginActivity", "Android < 13, no se requiere permiso runtime para notificaciones");
+        }
+    }
+
+    /**
+     * 🔥 Maneja la respuesta del usuario a la solicitud de permiso
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d("LoginActivity", "✅ Permiso de notificaciones concedido");
+                Toast.makeText(this, "¡Gracias! Ahora recibirás notificaciones importantes", Toast.LENGTH_SHORT).show();
+                
+            } else {
+                Log.w("LoginActivity", "❌ Permiso de notificaciones denegado");
+                Toast.makeText(this, "No podrás recibir notificaciones importantes. Puedes activarlas en Configuración.", Toast.LENGTH_LONG).show();
+                
+                // Opcional: Redirigir a configuración de la app
+                // Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+                // intent.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+                // startActivity(intent);
+            }
         }
     }
 }

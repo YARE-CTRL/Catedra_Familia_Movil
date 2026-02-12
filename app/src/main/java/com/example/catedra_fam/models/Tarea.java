@@ -4,12 +4,16 @@ public class Tarea {
     private int id;
     private String titulo;
     private String descripcion;
-    private String frecuencia; // semanal, quincenal, mensual
+    private String frecuencia; // semanal, quincenal, mensual, unica
+    private String fechaPublicacion;
     private String fechaVencimiento;
-    private String estado; // pendiente, completada, vencida, calificada
+    private int diasRestantes;
+    private String estado; // pendiente, completada, vencida, calificada, próximo_vencimiento
     private boolean incluyeEnBoletin;
     private String nota; // si está calificada
     private String feedback; // retroalimentación del docente
+    private String categoria; // nombre de la categoría
+    private String colorCategoria; // color de la categoría
 
     // Constructor vacío
     public Tarea() {}
@@ -94,6 +98,38 @@ public class Tarea {
 
     public void setFeedback(String feedback) {
         this.feedback = feedback;
+    }
+
+    public String getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(String categoria) {
+        this.categoria = categoria;
+    }
+
+    public String getColorCategoria() {
+        return colorCategoria;
+    }
+
+    public void setColorCategoria(String colorCategoria) {
+        this.colorCategoria = colorCategoria;
+    }
+
+    public String getFechaPublicacion() {
+        return fechaPublicacion;
+    }
+
+    public void setFechaPublicacion(String fechaPublicacion) {
+        this.fechaPublicacion = fechaPublicacion;
+    }
+
+    public int getDiasRestantes() {
+        return diasRestantes;
+    }
+
+    public void setDiasRestantes(int diasRestantes) {
+        this.diasRestantes = diasRestantes;
     }
 
     // Helper para verificar si está vencida

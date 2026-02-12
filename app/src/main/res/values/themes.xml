@@ -25,20 +25,14 @@
 
     <!-- Estilo personalizado para Chips compatible con MaterialComponents -->
     <style name="CustomChipStyle" parent="Widget.MaterialComponents.Chip.Filter">
-        <item name="android:textAppearance">@style/ChipTextAppearance</item>
+        <item name="android:textAppearance">@style/TextAppearance.MaterialComponents.Body2</item>
         <item name="chipBackgroundColor">@color/chip_background_selector</item>
         <item name="android:textColor">@color/chip_text_color_selector</item>
         <item name="checkedIconVisible">false</item>
         <item name="chipMinHeight">40dp</item>
         <item name="chipStartPadding">12dp</item>
         <item name="chipEndPadding">12dp</item>
-    </style>
-
-    <!-- Apariencia de texto para Chips -->
-    <style name="ChipTextAppearance" parent="TextAppearance.MaterialComponents.Body2">
         <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/chip_text_color_selector</item>
-        <item name="android:fontFamily">sans-serif-medium</item>
     </style>
 
     <!-- Estilos de botones compatibles -->

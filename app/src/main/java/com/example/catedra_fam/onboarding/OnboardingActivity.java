@@ -9,6 +9,7 @@ import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 import com.example.catedra_fam.LoginActivity;
+import com.example.catedra_fam.MainActivity;
 import com.example.catedra_fam.R;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.tabs.TabLayout;
@@ -27,14 +28,6 @@ public class OnboardingActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // ============================================
-        // MODO DESARROLLO - Para saltar onboarding
-        // ============================================
-        // Descomenta las siguientes 3 líneas para saltar el onboarding en desarrollo:
-        // navigateToLogin();
-        // return;
-        // ============================================
 
         // Verificar si ya completó onboarding
         SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
@@ -197,6 +190,21 @@ public class OnboardingActivity extends AppCompatActivity {
         Intent intent = new Intent(this, LoginActivity.class);
         startActivity(intent);
         finish(); // No permitir volver atrás
+    }
+
+    private void navigateToMainDirectly() {
+        // Configurar datos de prueba para el acudiente
+        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        prefs.edit()
+            .putString("nombre_usuario", "Usuario Demo")
+            .putString("correo_usuario", "demo@test.com")
+            .putInt("acudiente_id", 1)
+            .putString("AUTH_TOKEN", "demo_token_bypass")
+            .apply();
+
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+        finish();
     }
 }
 

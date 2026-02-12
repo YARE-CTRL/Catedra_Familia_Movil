@@ -14,11 +14,18 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.catedra_fam.adapters.NotificacionesAdapter;
+import com.example.catedra_fam.api.ApiService;
+import com.example.catedra_fam.api.RetrofitClient;
+import com.example.catedra_fam.models.ApiResponse;
 import com.example.catedra_fam.models.Notificacion;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class NotificacionesActivity extends AppCompatActivity implements NotificacionesAdapter.OnNotificacionClickListener {
 
@@ -33,11 +40,14 @@ public class NotificacionesActivity extends AppCompatActivity implements Notific
     // Data
     private NotificacionesAdapter notificacionesAdapter;
     private List<Notificacion> listaNotificaciones;
+    private ApiService apiService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notificaciones);
+
+        apiService = RetrofitClient.getApiService(this);
 
         initViews();
         setupToolbar();
@@ -83,87 +93,57 @@ public class NotificacionesActivity extends AppCompatActivity implements Notific
     }
 
     private void cargarNotificaciones() {
-        // TODO: Llamar a API real
-        listaNotificaciones.clear();
-        listaNotificaciones.addAll(getMockNotificaciones());
-        notificacionesAdapter.notifyDataSetChanged();
+        // Mostrar loading
+        swipeRefresh.setRefreshing(true);
 
-        actualizarContadorNoLeidas();
-        actualizarEmptyState();
+        // Llamar API para obtener notificaciones reales
+        apiService.getNotificaciones(null, null).enqueue(new Callback<ApiResponse<List<Notificacion>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Notificacion>>> call, Response<ApiResponse<List<Notificacion>>> response) {
+                swipeRefresh.setRefreshing(false);
+
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse<List<Notificacion>> apiResponse = response.body();
+
+                    if (apiResponse.isSuccess()) {
+                        listaNotificaciones.clear();
+                        if (apiResponse.getData() != null) {
+                            listaNotificaciones.addAll(apiResponse.getData());
+                        }
+                        notificacionesAdapter.notifyDataSetChanged();
+                        actualizarContadorNoLeidas();
+                        actualizarEmptyState();
+                    } else {
+                        Toast.makeText(NotificacionesActivity.this,
+                            "Error al cargar notificaciones: " + apiResponse.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                        mostrarEstadoVacio();
+                    }
+                } else {
+                    Toast.makeText(NotificacionesActivity.this,
+                        "Error del servidor: " + response.code(),
+                        Toast.LENGTH_SHORT).show();
+                    mostrarEstadoVacio();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<Notificacion>>> call, Throwable t) {
+                swipeRefresh.setRefreshing(false);
+                Toast.makeText(NotificacionesActivity.this,
+                    "Error de conexión: " + t.getMessage(),
+                    Toast.LENGTH_SHORT).show();
+                mostrarEstadoVacio();
+            }
+        });
     }
 
-    private List<Notificacion> getMockNotificaciones() {
-        List<Notificacion> notificaciones = new ArrayList<>();
+    private void mostrarEstadoVacio() {
+        listaNotificaciones.clear();
 
-        // No leídas
-        notificaciones.add(new Notificacion(
-            "1",
-            "nueva_tarea",
-            "Nueva tarea asignada",
-            "\"Receta familiar tradicional\" para Juan Pérez (5° A)",
-            "Hace 2 horas",
-            false,
-            "VER_TAREA",
-            "tarea_006"
-        ));
-
-        notificaciones.add(new Notificacion(
-            "2",
-            "recordatorio",
-            "Recordatorio de tarea",
-            "La tarea \"Lectura en familia\" vence mañana",
-            "Hace 5 horas",
-            false,
-            "ENTREGAR",
-            "tarea_001"
-        ));
-
-        // Leídas
-        notificaciones.add(new Notificacion(
-            "3",
-            "calificada",
-            "Tarea calificada",
-            "\"Juego de roles en familia\" ha sido calificada: Alto (4.5)",
-            "27 Nov, 10:30am",
-            true,
-            "VER_NOTA",
-            "entrega_002"
-        ));
-
-        notificaciones.add(new Notificacion(
-            "4",
-            "anuncio",
-            "Reunión de padres",
-            "Se convoca a reunión de padres el 30 de noviembre a las 2pm en el salón principal",
-            "26 Nov, 8:00am",
-            true,
-            "VER",
-            null
-        ));
-
-        notificaciones.add(new Notificacion(
-            "5",
-            "calificada",
-            "Tarea calificada",
-            "\"Conversación sobre valores\" ha sido calificada: Superior (5.0)",
-            "20 Nov, 3:45pm",
-            true,
-            "VER_NOTA",
-            "entrega_003"
-        ));
-
-        notificaciones.add(new Notificacion(
-            "6",
-            "nueva_tarea",
-            "Nueva tarea asignada",
-            "\"Caminata ecológica\" para Ana Pérez (3° B)",
-            "15 Nov, 9:00am",
-            true,
-            "VER_TAREA",
-            "tarea_005"
-        ));
-
-        return notificaciones;
+        notificacionesAdapter.notifyDataSetChanged();
+        actualizarContadorNoLeidas();
+        actualizarEmptyState();
     }
 
     private void actualizarContadorNoLeidas() {
@@ -215,10 +195,10 @@ public class NotificacionesActivity extends AppCompatActivity implements Notific
 
     @Override
     public void onAccionClick(Notificacion notificacion) {
-        // Marcar como leída
-        notificacion.setLeida(true);
-        notificacionesAdapter.notifyDataSetChanged();
-        actualizarContadorNoLeidas();
+        // Marcar como leída usando la API
+        if (!notificacion.isLeida()) {
+            marcarComoLeida(notificacion);
+        }
 
         // Navegar según acción
         switch (notificacion.getAccion()) {
@@ -240,12 +220,35 @@ public class NotificacionesActivity extends AppCompatActivity implements Notific
 
     @Override
     public void onNotificacionClick(Notificacion notificacion) {
-        // Marcar como leída al tocar
+        // Marcar como leída al tocar usando la API
         if (!notificacion.isLeida()) {
-            notificacion.setLeida(true);
-            notificacionesAdapter.notifyDataSetChanged();
-            actualizarContadorNoLeidas();
+            marcarComoLeida(notificacion);
         }
+    }
+
+    private void marcarComoLeida(Notificacion notificacion) {
+        apiService.marcarNotificacionLeida(notificacion.getId()).enqueue(new Callback<ApiResponse<String>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse<String> apiResponse = response.body();
+                    if (apiResponse.isSuccess()) {
+                        // Actualizar localmente
+                        notificacion.setLeida(true);
+                        notificacionesAdapter.notifyDataSetChanged();
+                        actualizarContadorNoLeidas();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
+                // Si falla la API, actualizar solo localmente
+                notificacion.setLeida(true);
+                notificacionesAdapter.notifyDataSetChanged();
+                actualizarContadorNoLeidas();
+            }
+        });
     }
 }
 

@@ -2,6 +2,7 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/card_tarea"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -36,21 +37,23 @@
                 android:id="@+id/tv_titulo_tarea"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Lectura en familia"
+                android:text=""
                 android:textColor="@color/gray_900"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
+                android:layout_marginBottom="4dp"
+                tools:text="Título de la tarea" />
 
             <!-- Fecha -->
             <TextView
                 android:id="@+id/tv_fecha"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Vence: 29 Nov 2026"
+                android:text=""
                 android:textColor="@color/gray_600"
                 android:textSize="13sp"
-                android:layout_marginBottom="4dp" />
+                android:layout_marginBottom="4dp"
+                tools:text="Vence: 29 Nov 2026" />
 
             <!-- Frecuencia y Estado en una línea -->
             <LinearLayout
@@ -63,9 +66,10 @@
                     android:id="@+id/tv_frecuencia"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Semanal"
+                    android:text=""
                     android:textColor="@color/gray_600"
-                    android:textSize="12sp" />
+                    android:textSize="12sp"
+                    tools:text="Semanal" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -78,7 +82,8 @@
                     android:id="@+id/tv_estado"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sin entregar"
+                    android:text=""
+                    tools:text="Sin entregar"
                     android:textColor="@color/warning"
                     android:textSize="12sp"
                     android:textStyle="bold" />
@@ -90,12 +95,13 @@
                 android:id="@+id/tv_nota"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Nota: Alto (4.5)"
+                android:text=""
                 android:textColor="@color/secondary"
                 android:textSize="13sp"
                 android:textStyle="bold"
                 android:visibility="gone"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="8dp"
+                tools:text="Nota: Alto (4.5)" />
 
             <!-- Botón de acción -->
             <com.google.android.material.button.MaterialButton

@@ -62,5 +62,30 @@
     <color name="text_primary">#0B4F5C</color>      <!-- Texto principal (azul petróleo) -->
     <color name="text_secondary">#4B5563</color>    <!-- Texto secundario (gris) -->
     <color name="shimmer_placeholder">#E0E0E0</color>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- COLORES PARA ESTADOS DE TAREAS (UX OPTIMIZADA)             -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+
+    <!-- Estados de texto -->
+    <color name="success_text">#1FA3A8</color>          <!-- Verde azulado para pendientes -->
+    <color name="warning_text">#F2992E</color>          <!-- Naranja para próximas a vencer -->
+    <color name="error_text">#DC2626</color>            <!-- Rojo para vencidas -->
+    <color name="gold_text">#D97706</color>             <!-- Dorado para calificadas -->
+    <color name="neutral_text">#6B7280</color>          <!-- Gris neutro -->
+
+    <!-- Fondos de estados -->
+    <color name="success_background">#ECFDF5</color>     <!-- Fondo verde claro -->
+    <color name="success_light_background">#F0FDF4</color> <!-- Fondo verde muy claro -->
+    <color name="warning_background">#FFFBEB</color>     <!-- Fondo amarillo claro -->
+    <color name="error_background">#FEF2F2</color>      <!-- Fondo rojo claro -->
+    <color name="gold_background">#FEFCE8</color>       <!-- Fondo dorado claro -->
+    <color name="neutral_background">#F9FAFB</color>    <!-- Fondo gris neutro -->
+
+    <!-- Colores para progress y elementos interactivos -->
+    <color name="progress_success">#10B981</color>      <!-- Verde para progreso alto -->
+    <color name="progress_warning">#F59E0B</color>      <!-- Amarillo para progreso medio -->
+    <color name="progress_info">#3B82F6</color>         <!-- Azul para información -->
+    <color name="progress_error">#EF4444</color>        <!-- Rojo para progreso bajo -->
 </resources>
 

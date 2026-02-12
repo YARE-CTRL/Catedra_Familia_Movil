@@ -15,10 +15,19 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.catedra_fam.adapters.HistorialAdapter;
+import com.example.catedra_fam.api.ApiService;
+import com.example.catedra_fam.api.RetrofitClient;
+import com.example.catedra_fam.models.ApiResponse;
+import com.example.catedra_fam.models.HistorialResponse;
 import com.example.catedra_fam.models.Entrega;
 import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import java.util.List;
 
 public class HistorialActivity extends AppCompatActivity {
@@ -36,7 +45,9 @@ public class HistorialActivity extends AppCompatActivity {
     // Data
     private HistorialAdapter historialAdapter;
     private List<Entrega> listaEntregas;
-    private String estudianteId;
+    private ApiService apiService;
+    private int estudianteId;
+    private Integer periodoSeleccionadoId;
     private String estudianteNombre;
     private String estudianteCurso;
 
@@ -45,6 +56,7 @@ public class HistorialActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_historial);
 
+        apiService = RetrofitClient.getApiService(this);
         obtenerDatosIntent();
         initViews();
         setupToolbar();
@@ -55,11 +67,11 @@ public class HistorialActivity extends AppCompatActivity {
     }
 
     private void obtenerDatosIntent() {
-        estudianteId = getIntent().getStringExtra("ESTUDIANTE_ID");
+        estudianteId = getIntent().getIntExtra("ESTUDIANTE_ID", -1);
         estudianteNombre = getIntent().getStringExtra("ESTUDIANTE_NOMBRE");
         estudianteCurso = getIntent().getStringExtra("ESTUDIANTE_CURSO");
 
-        if (estudianteNombre == null) {
+        if (estudianteId == -1 || estudianteNombre == null) {
             estudianteNombre = "Estudiante";
         }
         if (estudianteCurso == null) {
@@ -85,21 +97,16 @@ public class HistorialActivity extends AppCompatActivity {
     }
 
     private void setupSpinnerPeriodo() {
-        // Periodos mock
-        String[] periodos = {
-            "Periodo 1 - 2026",
-            "Periodo 4 - 2025",
-            "Periodo 3 - 2025",
-            "Periodo 2 - 2025"
-        };
+        // Por ahora usar periodo activo - en futuro cargar desde API
+        String periodoActual = "Periodo Actual";
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
             this,
             android.R.layout.simple_dropdown_item_1line,
-            periodos
+            new String[]{periodoActual}
         );
         spinnerPeriodo.setAdapter(adapter);
-        spinnerPeriodo.setText(periodos[0], false);
+        spinnerPeriodo.setText(periodoActual, false);
 
         spinnerPeriodo.setOnItemClickListener((parent, view, position, id) -> {
             cargarEntregas();
@@ -128,89 +135,59 @@ public class HistorialActivity extends AppCompatActivity {
     }
 
     private void cargarEntregas() {
-        // TODO: Llamar a API real
-        listaEntregas.clear();
-        listaEntregas.addAll(getMockEntregas());
-        historialAdapter.notifyDataSetChanged();
+        swipeRefresh.setRefreshing(true);
 
-        actualizarResumen();
-        actualizarEmptyState();
+        // Llamar API para obtener el historial real
+        apiService.getHistorial(estudianteId, null).enqueue(new Callback<ApiResponse<HistorialResponse>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<HistorialResponse>> call, Response<ApiResponse<HistorialResponse>> response) {
+                swipeRefresh.setRefreshing(false);
+
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse<HistorialResponse> apiResponse = response.body();
+
+                    if (apiResponse.isSuccess()) {
+                        HistorialResponse historialData = apiResponse.getData();
+
+                        listaEntregas.clear();
+                        if (historialData != null && historialData.getEntregas() != null) {
+                            listaEntregas.addAll(historialData.getEntregas());
+                        }
+
+                        historialAdapter.notifyDataSetChanged();
+                        actualizarResumen();
+                        actualizarEmptyState();
+                    } else {
+                        Toast.makeText(HistorialActivity.this,
+                            "Error al cargar historial: " + apiResponse.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                        mostrarEstadoVacio();
+                    }
+                } else {
+                    Toast.makeText(HistorialActivity.this,
+                        "Error del servidor: " + response.code(),
+                        Toast.LENGTH_SHORT).show();
+                    mostrarEstadoVacio();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<HistorialResponse>> call, Throwable t) {
+                swipeRefresh.setRefreshing(false);
+                Toast.makeText(HistorialActivity.this,
+                    "Error de conexión: " + t.getMessage(),
+                    Toast.LENGTH_SHORT).show();
+                mostrarEstadoVacio();
+            }
+        });
     }
 
-    private List<Entrega> getMockEntregas() {
-        List<Entrega> entregas = new ArrayList<>();
+    private void mostrarEstadoVacio() {
+        listaEntregas.clear();
 
-        entregas.add(new Entrega(
-            "1",
-            "tarea_001",
-            "Lectura en familia: El Principito",
-            "2026-01-05",
-            "calificada",
-            "Leímos juntos el capítulo del zorro...",
-            4.5f,
-            "Alto",
-            "Excelente reflexión familiar. Sigan así.",
-            "Profe. Claudia",
-            "2026-01-07"
-        ));
-
-        entregas.add(new Entrega(
-            "2",
-            "tarea_002",
-            "Juego de roles en familia",
-            "2026-01-03",
-            "en_revision",
-            "Jugamos a representar situaciones...",
-            0f,
-            null,
-            null,
-            null,
-            null
-        ));
-
-        entregas.add(new Entrega(
-            "3",
-            "tarea_003",
-            "Conversación sobre valores",
-            "2025-12-28",
-            "calificada",
-            "Hablamos sobre la honestidad...",
-            5.0f,
-            "Superior",
-            "Muy bien aplicado el concepto de honestidad con ejemplos del día a día.",
-            "Profe. Claudia",
-            "2025-12-30"
-        ));
-
-        entregas.add(new Entrega(
-            "4",
-            "tarea_004",
-            "Receta familiar tradicional",
-            "2025-12-20",
-            "calificada",
-            "Preparamos empanadas con la abuela...",
-            4.0f,
-            "Alto",
-            "Bonita tradición familiar. Las fotos muestran participación de todos.",
-            "Profe. Claudia",
-            "2025-12-22"
-        ));
-
-        entregas.add(new Entrega(
-            "5",
-            "tarea_005",
-            "Caminata ecológica",
-            "2025-12-15",
-            "calificada",
-            "Fuimos al parque y recogimos basura...",
-            4.5f,
-            "Alto",
-            "Gran iniciativa de cuidado ambiental.",
-            "Profe. Claudia",
-            "2025-12-17"
-        ));
-
-        return entregas;
+        historialAdapter.notifyDataSetChanged();
+        actualizarResumen();
+        actualizarEmptyState();
     }
 
     private void actualizarResumen() {

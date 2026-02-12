@@ -10,7 +10,7 @@
     <!-- Login -->
     <string name="bienvenido_titulo">Bienvenido a PARCHANDO JUNTOS</string>
     <string name="ingresa_correo">Ingresa con tu correo</string>
-    <string name="hint_correo">correo@ejemplo.com</string>
+    <string name="hint_correo">Número de documento</string>
     <string name="hint_contrasena">Contraseña</string>
     <string name="recordar_sesion">Recordar sesión</string>
     <string name="btn_ingresar">INGRESAR</string>
@@ -96,12 +96,6 @@
     <string name="nav_ayuda">Ayuda</string>
     <string name="nav_cerrar_sesion">Cerrar Sesión</string>
 
-    <!-- Demo data (se removerá cuando haya API) -->
-    <string name="greeting">¡Bienvenido!</string>
-    <string name="subtitle">Proyecto con diseño moderno</string>
-    <string name="animation_title">Animación Interactiva</string>
-    <string name="button_text">Comenzar</string>
-    <string name="loading_text">Cargando contenido…</string>
 
     <!-- Tareas -->
     <string name="tareas_titulo">Tareas de %1$s</string>

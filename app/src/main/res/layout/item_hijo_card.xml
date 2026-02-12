@@ -51,11 +51,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:gravity="center"
-                    android:text="JP"
+                    android:text=""
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="@color/white"
-                    tools:text="JP" />
+                    tools:text="AB" />
 
             </FrameLayout>
 
@@ -71,17 +71,17 @@
                     android:id="@+id/tv_nombre_hijo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Juan Pérez"
+                    android:text=""
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="@color/gray_900"
-                    tools:text="Juan Pérez" />
+                    tools:text="Nombre Estudiante" />
 
                 <TextView
                     android:id="@+id/tv_curso"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="5° A"
+                    android:text=""
                     android:textSize="13sp"
                     android:textColor="@color/gray_600"
                     tools:text="5° A" />
@@ -117,7 +117,7 @@
                     android:id="@+id/tv_pendientes"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="2 pendientes"
+                    android:text=""
                     android:textSize="12sp"
                     android:textColor="@color/warning"
                     tools:text="2 pendientes" />
@@ -136,7 +136,7 @@
                     android:id="@+id/tv_completadas"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="3 completadas"
+                    android:text=""
                     android:textSize="12sp"
                     android:textColor="@color/success"
                     tools:text="3 completadas" />
@@ -155,7 +155,7 @@
                     android:id="@+id/tv_calificadas"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="1 calificada"
+                    android:text=""
                     android:textSize="12sp"
                     android:textColor="@color/info"
                     tools:text="1 calificada" />
@@ -172,10 +172,10 @@
             android:layout_marginTop="12dp"
             android:padding="10dp"
             android:background="@drawable/bg_proxima_tarea"
-            android:text="📅 Lectura familiar - 15 Ene"
+            android:text=""
             android:textSize="12sp"
             android:textColor="@color/gray_600"
-            android:visibility="visible"
+            android:visibility="gone"
             tools:text="📅 Lectura familiar - 15 Ene" />
 
         <!-- Botón Ver Tareas -->

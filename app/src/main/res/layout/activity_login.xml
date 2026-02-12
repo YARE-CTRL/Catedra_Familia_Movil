@@ -112,27 +112,28 @@
                         android:layout_gravity="center_horizontal"
                         android:layout_marginBottom="24dp" />
 
-                    <!-- Input Correo con icono -->
+                    <!-- Input Número de Documento con icono -->
                     <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/til_correo"
+                        android:id="@+id/til_documento"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:hint="Correo Electrónico"
-                        app:startIconDrawable="@drawable/ic_email"
+                        android:hint="Número de Documento"
+                        app:startIconDrawable="@drawable/ic_person"
                         app:startIconTint="@color/primary"
                         app:boxStrokeWidth="0dp"
                         app:boxBackgroundMode="none"
                         app:hintTextColor="@color/gray_600">
 
                         <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/et_correo"
+                            android:id="@+id/et_documento"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="textEmailAddress"
+                            android:inputType="number"
                             android:textSize="16sp"
                             android:textColor="@color/gray_900"
                             android:background="@drawable/bg_input_selector"
-                            android:padding="16dp" />
+                            android:padding="16dp"
+                            android:maxLength="15" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <!-- Input Contraseña con icono -->

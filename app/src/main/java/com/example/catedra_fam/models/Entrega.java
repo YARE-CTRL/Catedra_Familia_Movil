@@ -1,81 +1,238 @@
 package com.example.catedra_fam.models;
 
+import com.google.gson.annotations.SerializedName;
+import java.util.List;
+
+/**
+ * Modelo de Entrega (Evidencia de tarea)
+ * RF-MO-007, RF-MO-008, RF-MO-010
+ */
 public class Entrega {
-    private String id;
-    private String tareaId;
-    private String tareaTitulo;
-    private String fechaEntrega;
-    private String estado; // enviada, en_revision, calificada
+    @SerializedName("id")
+    private int id;
+
+    @SerializedName("asignacionId")
+    private int asignacionId;
+
+    @SerializedName("estudianteId")
+    private int estudianteId;
+
+    @SerializedName("acudienteId")
+    private int acudienteId;
+
+    @SerializedName("evidenciaTexto")
     private String evidenciaTexto;
-    private float nota;
-    private String notaCualitativa; // Superior, Alto, Básico, Bajo
-    private String feedback;
-    private String calificadoPor;
-    private String calificadoEn;
 
-    public Entrega() {}
+    @SerializedName("archivosUrl")
+    private List<String> archivosUrl;
 
-    public Entrega(String id, String tareaId, String tareaTitulo, String fechaEntrega,
-                   String estado, String evidenciaTexto, float nota, String notaCualitativa,
-                   String feedback, String calificadoPor, String calificadoEn) {
-        this.id = id;
-        this.tareaId = tareaId;
-        this.tareaTitulo = tareaTitulo;
-        this.fechaEntrega = fechaEntrega;
-        this.estado = estado;
-        this.evidenciaTexto = evidenciaTexto;
-        this.nota = nota;
-        this.notaCualitativa = notaCualitativa;
-        this.feedback = feedback;
-        this.calificadoPor = calificadoPor;
-        this.calificadoEn = calificadoEn;
-    }
+    @SerializedName("fechaEntrega")
+    private String fechaEntrega;
+
+    @SerializedName("estado")
+    private String estado; // enviada, calificada
+
+    @SerializedName("nombreEnvio")
+    private String nombreEnvio;
+
+    @SerializedName("asignacion")
+    private AsignacionResumen asignacion;
+
+    @SerializedName("calificacion")
+    private CalificacionResumen calificacion;
 
     // Getters y Setters
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public int getId() {
+        return id;
+    }
 
-    public String getTareaId() { return tareaId; }
-    public void setTareaId(String tareaId) { this.tareaId = tareaId; }
+    public void setId(int id) {
+        this.id = id;
+    }
 
-    public String getTareaTitulo() { return tareaTitulo; }
-    public void setTareaTitulo(String tareaTitulo) { this.tareaTitulo = tareaTitulo; }
+    public int getAsignacionId() {
+        return asignacionId;
+    }
 
-    public String getFechaEntrega() { return fechaEntrega; }
-    public void setFechaEntrega(String fechaEntrega) { this.fechaEntrega = fechaEntrega; }
+    public void setAsignacionId(int asignacionId) {
+        this.asignacionId = asignacionId;
+    }
 
-    public String getEstado() { return estado; }
-    public void setEstado(String estado) { this.estado = estado; }
+    public int getEstudianteId() {
+        return estudianteId;
+    }
 
-    public String getEvidenciaTexto() { return evidenciaTexto; }
-    public void setEvidenciaTexto(String evidenciaTexto) { this.evidenciaTexto = evidenciaTexto; }
+    public void setEstudianteId(int estudianteId) {
+        this.estudianteId = estudianteId;
+    }
 
-    public float getNota() { return nota; }
-    public void setNota(float nota) { this.nota = nota; }
+    public int getAcudienteId() {
+        return acudienteId;
+    }
 
-    public String getNotaCualitativa() { return notaCualitativa; }
-    public void setNotaCualitativa(String notaCualitativa) { this.notaCualitativa = notaCualitativa; }
+    public void setAcudienteId(int acudienteId) {
+        this.acudienteId = acudienteId;
+    }
 
-    public String getFeedback() { return feedback; }
-    public void setFeedback(String feedback) { this.feedback = feedback; }
+    public String getEvidenciaTexto() {
+        return evidenciaTexto;
+    }
 
-    public String getCalificadoPor() { return calificadoPor; }
-    public void setCalificadoPor(String calificadoPor) { this.calificadoPor = calificadoPor; }
+    public void setEvidenciaTexto(String evidenciaTexto) {
+        this.evidenciaTexto = evidenciaTexto;
+    }
 
-    public String getCalificadoEn() { return calificadoEn; }
-    public void setCalificadoEn(String calificadoEn) { this.calificadoEn = calificadoEn; }
+    public List<String> getArchivosUrl() {
+        return archivosUrl;
+    }
 
-    // Helpers
+    public void setArchivosUrl(List<String> archivosUrl) {
+        this.archivosUrl = archivosUrl;
+    }
+
+    public String getFechaEntrega() {
+        return fechaEntrega;
+    }
+
+    public void setFechaEntrega(String fechaEntrega) {
+        this.fechaEntrega = fechaEntrega;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
+    public String getNombreEnvio() {
+        return nombreEnvio;
+    }
+
+    public void setNombreEnvio(String nombreEnvio) {
+        this.nombreEnvio = nombreEnvio;
+    }
+
+    public AsignacionResumen getAsignacion() {
+        return asignacion;
+    }
+
+    public void setAsignacion(AsignacionResumen asignacion) {
+        this.asignacion = asignacion;
+    }
+
+    public CalificacionResumen getCalificacion() {
+        return calificacion;
+    }
+
+    public void setCalificacion(CalificacionResumen calificacion) {
+        this.calificacion = calificacion;
+    }
+
+    // Métodos helper para acceso rápido
+    public String getTareaTitulo() {
+        return asignacion != null ? asignacion.getTitulo() : "";
+    }
+
+    public Double getNota() {
+        return calificacion != null ? calificacion.getNota() : null;
+    }
+
+    public String getNotaCualitativa() {
+        return calificacion != null ? calificacion.getEscala() : "";
+    }
+
+    public String getFeedback() {
+        return calificacion != null ? calificacion.getRetroalimentacion() : null;
+    }
+
     public boolean isCalificada() {
-        return "calificada".equals(estado);
+        return calificacion != null && calificacion.getNota() > 0;
     }
 
-    public boolean isEnRevision() {
-        return "en_revision".equals(estado);
+    // Clases internas
+    public static class AsignacionResumen {
+        @SerializedName("id")
+        private int id;
+
+        @SerializedName("titulo")
+        private String titulo;
+
+        @SerializedName("frecuencia")
+        private String frecuencia;
+
+        // Getters y Setters
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public String getTitulo() {
+            return titulo;
+        }
+
+        public void setTitulo(String titulo) {
+            this.titulo = titulo;
+        }
+
+        public String getFrecuencia() {
+            return frecuencia;
+        }
+
+        public void setFrecuencia(String frecuencia) {
+            this.frecuencia = frecuencia;
+        }
     }
 
-    public boolean isEnviada() {
-        return "enviada".equals(estado);
+    public static class CalificacionResumen {
+        @SerializedName("nota")
+        private double nota;
+
+        @SerializedName("escala")
+        private String escala;
+
+        @SerializedName("retroalimentacion")
+        private String retroalimentacion;
+
+        @SerializedName("calificadoEn")
+        private String calificadoEn;
+
+        // Getters y Setters
+        public double getNota() {
+            return nota;
+        }
+
+        public void setNota(double nota) {
+            this.nota = nota;
+        }
+
+        public String getEscala() {
+            return escala;
+        }
+
+        public void setEscala(String escala) {
+            this.escala = escala;
+        }
+
+        public String getRetroalimentacion() {
+            return retroalimentacion;
+        }
+
+        public void setRetroalimentacion(String retroalimentacion) {
+            this.retroalimentacion = retroalimentacion;
+        }
+
+        public String getCalificadoEn() {
+            return calificadoEn;
+        }
+
+        public void setCalificadoEn(String calificadoEn) {
+            this.calificadoEn = calificadoEn;
+        }
     }
 }
 
