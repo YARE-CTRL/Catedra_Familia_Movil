@@ -1,20 +1,27 @@
 package com.example.catedra_fam.models;
 
+import com.google.gson.annotations.SerializedName;
+
 public class DeviceInfo {
+    @SerializedName("fcmToken")
     private String fcmToken;
-    private String plataforma;
+
+    @SerializedName("dispositivo")
+    private String dispositivo;
+
+    @SerializedName("sistemaOperativo")
+    private String sistemaOperativo;
+
+    @SerializedName("versionApp")
     private String versionApp;
-    private String modeloDispositivo;
-    private String versionOs;
 
     public DeviceInfo() {}
 
-    public DeviceInfo(String fcmToken, String plataforma, String versionApp, String modeloDispositivo, String versionOs) {
+    public DeviceInfo(String fcmToken, String dispositivo, String sistemaOperativo, String versionApp) {
         this.fcmToken = fcmToken;
-        this.plataforma = plataforma;
+        this.dispositivo = dispositivo;
+        this.sistemaOperativo = sistemaOperativo;
         this.versionApp = versionApp;
-        this.modeloDispositivo = modeloDispositivo;
-        this.versionOs = versionOs;
     }
 
     // Getters y Setters
@@ -26,12 +33,20 @@ public class DeviceInfo {
         this.fcmToken = fcmToken;
     }
 
-    public String getPlataforma() {
-        return plataforma;
+    public String getDispositivo() {
+        return dispositivo;
     }
 
-    public void setPlataforma(String plataforma) {
-        this.plataforma = plataforma;
+    public void setDispositivo(String dispositivo) {
+        this.dispositivo = dispositivo;
+    }
+
+    public String getSistemaOperativo() {
+        return sistemaOperativo;
+    }
+
+    public void setSistemaOperativo(String sistemaOperativo) {
+        this.sistemaOperativo = sistemaOperativo;
     }
 
     public String getVersionApp() {
@@ -42,19 +57,13 @@ public class DeviceInfo {
         this.versionApp = versionApp;
     }
 
-    public String getModeloDispositivo() {
-        return modeloDispositivo;
-    }
-
-    public void setModeloDispositivo(String modeloDispositivo) {
-        this.modeloDispositivo = modeloDispositivo;
-    }
-
-    public String getVersionOs() {
-        return versionOs;
-    }
-
-    public void setVersionOs(String versionOs) {
-        this.versionOs = versionOs;
+    @Override
+    public String toString() {
+        return "DeviceInfo{" +
+                "fcmToken='" + fcmToken + '\'' +
+                ", dispositivo='" + dispositivo + '\'' +
+                ", sistemaOperativo='" + sistemaOperativo + '\'' +
+                ", versionApp='" + versionApp + '\'' +
+                '}';
     }
 }

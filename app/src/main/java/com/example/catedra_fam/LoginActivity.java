@@ -23,6 +23,7 @@ import com.example.catedra_fam.models.ApiResponse;
 import com.example.catedra_fam.models.LoginRequest;
 import com.example.catedra_fam.models.LoginResponse;
 import com.example.catedra_fam.models.DeviceInfo;
+import com.example.catedra_fam.utils.DialogHelper;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import retrofit2.Call;
@@ -135,7 +136,7 @@ public class LoginActivity extends AppCompatActivity {
                         
                         loginExitoso(loginResponse.getUser().getNombreCompleto());
                     } else {
-                        Toast.makeText(LoginActivity.this, "Credenciales incorrectas", Toast.LENGTH_SHORT).show();
+                        DialogHelper.showErrorDialog(LoginActivity.this, "Credenciales incorrectas");
                     }
                 } else {
                     // Manejar error HTTP
@@ -148,7 +149,7 @@ public class LoginActivity extends AppCompatActivity {
                     } catch (Exception e) {
                         errorMsg = "Error: " + response.code();
                     }
-                    Toast.makeText(LoginActivity.this, errorMsg, Toast.LENGTH_LONG).show();
+                    DialogHelper.showErrorDialog(LoginActivity.this, errorMsg);
                 }
             }
             
@@ -159,7 +160,7 @@ public class LoginActivity extends AppCompatActivity {
                 if (t.getMessage() != null) {
                     errorMsg = "Error de conexión: " + t.getMessage();
                 }
-                Toast.makeText(LoginActivity.this, errorMsg, Toast.LENGTH_LONG).show();
+                DialogHelper.showErrorDialog(LoginActivity.this, errorMsg);
             }
         });
     }
@@ -237,12 +238,12 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void loginExitoso(String nombreAcudiente) {
-        Toast.makeText(this, "¡Bienvenido " + nombreAcudiente + "!", Toast.LENGTH_SHORT).show();
-        
         // Registrar token FCM después del login exitoso
         registrarFCMTokenDespuesDeLogin();
         
+        // Navegar directamente sin mostrar dialog para evitar WindowLeak
         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        intent.putExtra("MENSAJE_BIENVENIDA", "¡Bienvenido " + nombreAcudiente + "!");
         startActivity(intent);
         finish();
     }
@@ -262,10 +263,9 @@ public class LoginActivity extends AppCompatActivity {
             // Crear información del dispositivo
             DeviceInfo deviceInfo = new DeviceInfo(
                 fcmToken,
-                "android",
-                "1.0", // Versión hardcoded temporalmente
-                android.os.Build.MODEL,
-                android.os.Build.VERSION.RELEASE
+                android.os.Build.MODEL,           // dispositivo
+                "android",                        // sistemaOperativo
+                "1.0.0"                          // versionApp
             );
             
             // Registrar token en backend
@@ -334,7 +334,7 @@ public class LoginActivity extends AppCompatActivity {
                         })
                         .setNegativeButton("Cancelar", (dialog, which) -> {
                             Log.w("LoginActivity", "Usuario denegó permiso de notificaciones");
-                            Toast.makeText(this, "No podrás recibir notificaciones importantes", Toast.LENGTH_LONG).show();
+                            DialogHelper.showInfoDialog(this, "Permiso de Notificaciones", "No podrás recibir notificaciones importantes");
                         })
                         .show();
                 } else {
@@ -364,16 +364,11 @@ public class LoginActivity extends AppCompatActivity {
         if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.d("LoginActivity", "✅ Permiso de notificaciones concedido");
-                Toast.makeText(this, "¡Gracias! Ahora recibirás notificaciones importantes", Toast.LENGTH_SHORT).show();
-                
+                DialogHelper.showSuccessDialog(this, "¡Gracias! Ahora recibirás notificaciones importantes");
+
             } else {
                 Log.w("LoginActivity", "❌ Permiso de notificaciones denegado");
-                Toast.makeText(this, "No podrás recibir notificaciones importantes. Puedes activarlas en Configuración.", Toast.LENGTH_LONG).show();
-                
-                // Opcional: Redirigir a configuración de la app
-                // Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
-                // intent.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
-                // startActivity(intent);
+                DialogHelper.showInfoDialog(this, "Permiso de Notificaciones", "No podrás recibir notificaciones importantes. Puedes activarlas en Configuración.");
             }
         }
     }

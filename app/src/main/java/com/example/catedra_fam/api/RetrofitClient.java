@@ -11,11 +11,12 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * Cliente Retrofit configurado para consumir la API móvil
- * Base URL: https://escuelaparapadres-backend-1.onrender.com/api/movil/
+ * Base URL: https://escuelaparapadres-backend-1.onrender.com/api/
+ * CORREGIDO: Dominio correcto y sin duplicar /movil/
  */
 public class RetrofitClient {
 
-    private static final String BASE_URL = "https://escuelaparapadres-backend-1.onrender.com/api/movil/";
+    private static final String BASE_URL = "https://escuelaparapadres-backend-1.onrender.com/api/";
     private static Retrofit retrofit = null;
 
     public static Retrofit getClient(Context context) {

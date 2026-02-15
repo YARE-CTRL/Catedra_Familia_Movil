@@ -6,7 +6,6 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -20,6 +19,7 @@ import com.example.catedra_fam.api.RetrofitClient;
 import com.example.catedra_fam.models.ApiResponse;
 import com.example.catedra_fam.models.HistorialResponse;
 import com.example.catedra_fam.models.Entrega;
+import com.example.catedra_fam.utils.DialogHelper;
 import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
@@ -117,9 +117,7 @@ public class HistorialActivity extends AppCompatActivity {
         listaEntregas = new ArrayList<>();
         historialAdapter = new HistorialAdapter(listaEntregas, entrega -> {
             // Ver evidencia
-            Toast.makeText(this,
-                "Ver evidencia de: " + entrega.getTareaTitulo(),
-                Toast.LENGTH_SHORT).show();
+            DialogHelper.showInfoDialog(this, "Evidencia", "Ver evidencia de: " + entrega.getTareaTitulo());
             // TODO: Abrir detalle de evidencia
         });
         rvEntregas.setLayoutManager(new LinearLayoutManager(this));
@@ -158,15 +156,11 @@ public class HistorialActivity extends AppCompatActivity {
                         actualizarResumen();
                         actualizarEmptyState();
                     } else {
-                        Toast.makeText(HistorialActivity.this,
-                            "Error al cargar historial: " + apiResponse.getMessage(),
-                            Toast.LENGTH_SHORT).show();
+                        DialogHelper.showErrorDialog(HistorialActivity.this, "Error al cargar historial: " + apiResponse.getMessage());
                         mostrarEstadoVacio();
                     }
                 } else {
-                    Toast.makeText(HistorialActivity.this,
-                        "Error del servidor: " + response.code(),
-                        Toast.LENGTH_SHORT).show();
+                    DialogHelper.showErrorDialog(HistorialActivity.this, "Error del servidor: " + response.code());
                     mostrarEstadoVacio();
                 }
             }
@@ -174,9 +168,7 @@ public class HistorialActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<ApiResponse<HistorialResponse>> call, Throwable t) {
                 swipeRefresh.setRefreshing(false);
-                Toast.makeText(HistorialActivity.this,
-                    "Error de conexión: " + t.getMessage(),
-                    Toast.LENGTH_SHORT).show();
+                DialogHelper.showErrorDialog(HistorialActivity.this, "Error de conexión: " + t.getMessage());
                 mostrarEstadoVacio();
             }
         });
@@ -233,4 +225,3 @@ public class HistorialActivity extends AppCompatActivity {
         }
     }
 }
-

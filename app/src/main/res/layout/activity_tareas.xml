@@ -66,6 +66,13 @@
                     android:text="Pendientes" />
 
                 <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_vencidas"
+                    style="@style/CustomChipStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Vencidas" />
+
+                <com.google.android.material.chip.Chip
                     android:id="@+id/chip_completadas"
                     style="@style/CustomChipStyle"
                     android:layout_width="wrap_content"

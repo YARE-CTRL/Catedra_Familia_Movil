@@ -6,6 +6,8 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -46,6 +48,8 @@ public class TareasActivity extends AppCompatActivity implements TareasAdapter.O
     private String estudianteNombre;
     private String estudianteCurso;
 
+    private ActivityResultLauncher<Intent> detalleTareaLauncher;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,6 +70,15 @@ public class TareasActivity extends AppCompatActivity implements TareasAdapter.O
         setupRecyclerView();
         setupListeners();
         cargarTareas();
+
+        detalleTareaLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK) {
+                    cargarTareas();
+                }
+            }
+        );
     }
 
     private void initViews() {
@@ -83,12 +96,11 @@ public class TareasActivity extends AppCompatActivity implements TareasAdapter.O
     private void setupToolbar() {
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("Tareas de " + estudianteNombre);
+            getSupportActionBar().setTitle(getString(R.string.tareas_titulo, estudianteNombre));
             getSupportActionBar().setSubtitle(estudianteCurso);
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
-
-        toolbar.setNavigationOnClickListener(v -> onBackPressed());
+        toolbar.setNavigationOnClickListener(v -> finish());
     }
 
     private void setupRecyclerView() {
@@ -121,22 +133,37 @@ public class TareasActivity extends AppCompatActivity implements TareasAdapter.O
         List<Tarea> filtradas = new ArrayList<>();
 
         if (chipId == R.id.chip_todas) {
+            // Mostrar TODAS las tareas sin filtro
             filtradas.addAll(listaOriginal);
+
         } else if (chipId == R.id.chip_pendientes) {
+            // Solo tareas PENDIENTES (dentro del plazo)
             for (Tarea t : listaOriginal) {
                 if ("pendiente".equals(t.getEstado()) ||
-                    "proxima".equals(t.getEstado()) ||
-                    "vencida".equals(t.getEstado())) {
+                    "próximo_vencimiento".equals(t.getEstado())) {
                     filtradas.add(t);
                 }
             }
-        } else if (chipId == R.id.chip_completadas) {
+
+        } else if (chipId == R.id.chip_vencidas) {
+            // Solo tareas VENCIDAS (fuera del plazo)
             for (Tarea t : listaOriginal) {
-                if ("completada".equals(t.getEstado())) {
+                if ("vencida".equals(t.getEstado())) {
                     filtradas.add(t);
                 }
             }
+
+        } else if (chipId == R.id.chip_completadas) {
+            // Solo tareas ENTREGADAS/COMPLETADAS
+            for (Tarea t : listaOriginal) {
+                if ("entregada".equals(t.getEstado()) ||
+                    "completada".equals(t.getEstado())) {
+                    filtradas.add(t);
+                }
+            }
+
         } else if (chipId == R.id.chip_calificadas) {
+            // Solo tareas CALIFICADAS
             for (Tarea t : listaOriginal) {
                 if ("calificada".equals(t.getEstado())) {
                     filtradas.add(t);
@@ -163,13 +190,13 @@ public class TareasActivity extends AppCompatActivity implements TareasAdapter.O
 
     private void cargarTareas() {
         swipeRefresh.setRefreshing(true);
-        
-        apiService.getTareas(estudianteId, null).enqueue(new TareasCallback() {
+        // getTareas espera 3 argumentos: estudianteId, periodoId, filtro
+        apiService.getTareas(estudianteId, null, null).enqueue(new TareasCallback() {
             @Override
-            public void onResponse(Call<ApiResponse<List<TareaLista>>> call,
-                                   Response<ApiResponse<List<TareaLista>>> response) {
+            public void onResponse(@androidx.annotation.NonNull Call<ApiResponse<List<TareaLista>>> call,
+                                   @androidx.annotation.NonNull Response<ApiResponse<List<TareaLista>>> response) {
                 swipeRefresh.setRefreshing(false);
-                
+
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<List<TareaLista>> apiResponse = response.body();
 
@@ -184,8 +211,11 @@ public class TareasActivity extends AppCompatActivity implements TareasAdapter.O
                             listaTareas.add(tarea);
                             listaOriginal.add(tarea);
                         }
-                        
+
                         tareasAdapter.notifyDataSetChanged();
+
+                        // ✅ NUEVO: Usar contadores del backend si están disponibles
+                        actualizarContadoresConMeta(apiResponse);
                         actualizarEstadoVacio();
                     } else {
                         Toast.makeText(TareasActivity.this, "Error al cargar tareas: " + apiResponse.getMessage(), Toast.LENGTH_SHORT).show();
@@ -196,9 +226,9 @@ public class TareasActivity extends AppCompatActivity implements TareasAdapter.O
                     mostrarEstadoVacioConError("Error del servidor");
                 }
             }
-            
+
             @Override
-            public void onFailure(Call<ApiResponse<List<TareaLista>>> call, Throwable t) {
+            public void onFailure(@androidx.annotation.NonNull Call<ApiResponse<List<TareaLista>>> call, @androidx.annotation.NonNull Throwable t) {
                 swipeRefresh.setRefreshing(false);
                 Toast.makeText(TareasActivity.this, "Error de conexión: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 mostrarEstadoVacioConError("Sin conexión a internet");
@@ -235,16 +265,66 @@ public class TareasActivity extends AppCompatActivity implements TareasAdapter.O
     }
 
 
+    /**
+     * ✅ NUEVO: Actualiza contadores usando el objeto meta del backend
+     */
+    private void actualizarContadoresConMeta(ApiResponse<List<TareaLista>> apiResponse) {
+        try {
+            // Intentar leer el objeto meta del backend
+            Object meta = apiResponse.getMeta();
+            if (meta instanceof com.google.gson.internal.LinkedTreeMap) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> metaMap = (java.util.Map<String, Object>) meta;
+
+                // Leer contadores desde el backend
+                Double totalDouble = (Double) metaMap.get("total");
+                Double pendientesDouble = (Double) metaMap.get("pendientes");
+                Double entregadasDouble = (Double) metaMap.get("entregadas");
+                Double calificadasDouble = (Double) metaMap.get("calificadas");
+                Double vencidasDouble = (Double) metaMap.get("vencidas");
+                Double porAtenderDouble = (Double) metaMap.get("porAtender");
+
+                int total = totalDouble != null ? totalDouble.intValue() : listaOriginal.size();
+                int pendientes = pendientesDouble != null ? pendientesDouble.intValue() : 0;
+                int entregadas = entregadasDouble != null ? entregadasDouble.intValue() : 0;
+                int calificadas = calificadasDouble != null ? calificadasDouble.intValue() : 0;
+                int vencidas = vencidasDouble != null ? vencidasDouble.intValue() : 0;
+                int porAtender = porAtenderDouble != null ? porAtenderDouble.intValue() : pendientes + vencidas;
+
+                android.util.Log.d("TareasActivity", "📊 Contadores desde backend:");
+                android.util.Log.d("TareasActivity", "   Total: " + total);
+                android.util.Log.d("TareasActivity", "   Pendientes: " + pendientes);
+                android.util.Log.d("TareasActivity", "   Vencidas: " + vencidas);
+                android.util.Log.d("TareasActivity", "   Entregadas: " + entregadas);
+                android.util.Log.d("TareasActivity", "   Calificadas: " + calificadas);
+                android.util.Log.d("TareasActivity", "   Por atender: " + porAtender);
+
+                // Actualizar chips con contadores del backend
+                chipTodas.setText(getString(R.string.tareas_filtro_todas, total));
+                chipPendientes.setText("Pendientes (" + porAtender + ")");  // Usar porAtender que incluye vencidas
+                chipCompletadas.setText(getString(R.string.tareas_filtro_completadas, entregadas));
+                chipCalificadas.setText(getString(R.string.tareas_filtro_calificadas, calificadas));
+
+                return; // Salir early si se procesó correctamente
+            }
+        } catch (Exception e) {
+            android.util.Log.w("TareasActivity", "Error procesando meta del backend, usando cálculo local", e);
+        }
+
+        // Fallback: usar método original si falla leer meta
+        actualizarContadores();
+    }
+
     private void actualizarContadores() {
         int pendientes = 0, completadas = 0, calificadas = 0;
         for (Tarea t : listaOriginal) {
             switch (t.getEstado()) {
                 case "pendiente":
-                case "proxima":
+                case "próximo_vencimiento":
                 case "vencida":
                     pendientes++;
                     break;
-                case "completada":
+                case "entregada":
                     completadas++;
                     break;
                 case "calificada":
@@ -252,11 +332,10 @@ public class TareasActivity extends AppCompatActivity implements TareasAdapter.O
                     break;
             }
         }
-
-        chipTodas.setText("Todas (" + listaOriginal.size() + ")");
-        chipPendientes.setText("Pendientes (" + pendientes + ")");
-        chipCompletadas.setText("Completadas (" + completadas + ")");
-        chipCalificadas.setText("Calificadas (" + calificadas + ")");
+        chipTodas.setText(getString(R.string.tareas_filtro_todas, listaOriginal.size()));
+        chipPendientes.setText(getString(R.string.tareas_filtro_pendientes, pendientes));
+        chipCompletadas.setText(getString(R.string.tareas_filtro_completadas, completadas));
+        chipCalificadas.setText(getString(R.string.tareas_filtro_calificadas, calificadas));
     }
 
     private void actualizarEstadoVacio() {
@@ -291,6 +370,6 @@ public class TareasActivity extends AppCompatActivity implements TareasAdapter.O
         intent.putExtra("TAREA_FEEDBACK", tarea.getFeedback());
         intent.putExtra("ESTUDIANTE_ID", estudianteId);
         intent.putExtra("ESTUDIANTE_NOMBRE", estudianteNombre);
-        startActivity(intent);
+        detalleTareaLauncher.launch(intent);
     }
 }

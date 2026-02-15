@@ -10,13 +10,12 @@ import androidx.work.WorkerParameters;
 
 import com.example.catedra_fam.api.ApiService;
 import com.example.catedra_fam.api.RetrofitClient;
-import com.example.catedra_fam.models.ApiResponse;
 import com.example.catedra_fam.models.Notificacion;
+import com.example.catedra_fam.models.NotificacionesResponse;
 
 import java.util.List;
 
 import retrofit2.Call;
-import retrofit2.Callback;
 import retrofit2.Response;
 
 public class NotificationSyncWorker extends Worker {
@@ -45,28 +44,35 @@ public class NotificationSyncWorker extends Worker {
             // Obtener notificaciones del backend
             ApiService apiService = RetrofitClient.getApiService(getApplicationContext());
             
-            Call<ApiResponse<List<Notificacion>>> call = apiService.getNotificaciones(false, 50);
-            
+            Call<NotificacionesResponse> call = apiService.getNotificaciones(1, 50, null, false);
+
             // Síncrono para Worker
-            Response<ApiResponse<List<Notificacion>>> response = call.execute();
-            
+            Response<NotificacionesResponse> response = call.execute();
+
             if (response.isSuccessful() && response.body() != null) {
-                ApiResponse<List<Notificacion>> apiResponse = response.body();
-                
-                if (apiResponse.isSuccess()) {
-                    List<Notificacion> notifications = apiResponse.getData();
-                    
+                NotificacionesResponse notifResponse = response.body();
+
+                if (notifResponse.isSuccess()) {
+                    List<Notificacion> notifications = notifResponse.getData();
+
                     // Procesar notificaciones no leídas
                     int unreadCount = 0;
-                    for (Notificacion notification : notifications) {
-                        if (!notification.isLeida()) {
-                            unreadCount++;
-                            
-                            // Si es urgente, mostrar notificación local
-                            if (notification.getMetadatos() != null && "alta".equals(notification.getMetadatos().getPrioridad())) {
-                                // Aquí se podría mostrar una notificación local si es necesario
-                                Log.d(TAG, "Urgent notification found: " + notification.getAsunto());
+                    if (notifResponse.getMeta() != null) {
+                        unreadCount = notifResponse.getMeta().getNoLeidas();
+                    } else {
+                        for (Notificacion notification : notifications) {
+                            if (!notification.isLeida()) {
+                                unreadCount++;
                             }
+                        }
+                    }
+
+                    // Verificar notificaciones urgentes
+                    for (Notificacion notification : notifications) {
+                        if (!notification.isLeida() && notification.getMetadatos() != null
+                            && "alta".equals(notification.getMetadatos().getPrioridad())) {
+                            // Aquí se podría mostrar una notificación local si es necesario
+                            Log.d(TAG, "Urgent notification found: " + notification.getAsunto());
                         }
                     }
                     
@@ -76,7 +82,7 @@ public class NotificationSyncWorker extends Worker {
                     Log.d(TAG, "Sync completed. Unread notifications: " + unreadCount);
                     return Result.success();
                 } else {
-                    Log.e(TAG, "API returned error: " + apiResponse.getMessage());
+                    Log.e(TAG, "API returned error");
                     return Result.failure();
                 }
             } else {

@@ -6,43 +6,44 @@ import com.google.gson.annotations.SerializedName;
  * Modelo para login móvil
  * RF-MO-001
  * URL: https://escuelaparapadres-backend-1.onrender.com/api/movil/auth/login/movil
+ * CORREGIDO: Usar campos documento y password según backend
  */
 public class LoginRequest {
     @SerializedName("documento")
-    private String documento;
+    private String numeroDocumento;
 
     @SerializedName("password")
-    private String password;
+    private String contrasena;
 
     @SerializedName("tokenFCM")
     private String tokenFCM; // Opcional
 
-    public LoginRequest(String documento, String password) {
-        this.documento = documento;
-        this.password = password;
+    public LoginRequest(String numeroDocumento, String contrasena) {
+        this.numeroDocumento = numeroDocumento;
+        this.contrasena = contrasena;
     }
 
-    public LoginRequest(String documento, String password, String tokenFCM) {
-        this.documento = documento;
-        this.password = password;
+    public LoginRequest(String numeroDocumento, String contrasena, String tokenFCM) {
+        this.numeroDocumento = numeroDocumento;
+        this.contrasena = contrasena;
         this.tokenFCM = tokenFCM;
     }
 
     // Getters y Setters
-    public String getDocumento() {
-        return documento;
+    public String getNumeroDocumento() {
+        return numeroDocumento;
     }
 
-    public void setDocumento(String documento) {
-        this.documento = documento;
+    public void setNumeroDocumento(String numeroDocumento) {
+        this.numeroDocumento = numeroDocumento;
     }
 
-    public String getPassword() {
-        return password;
+    public String getContrasena() {
+        return contrasena;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setContrasena(String contrasena) {
+        this.contrasena = contrasena;
     }
 
     public String getTokenFCM() {

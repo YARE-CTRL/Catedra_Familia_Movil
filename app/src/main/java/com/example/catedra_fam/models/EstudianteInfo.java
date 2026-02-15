@@ -1,23 +1,49 @@
 package com.example.catedra_fam.models;
 
 import com.google.gson.annotations.SerializedName;
+import java.util.List;
 
 /**
- * Modelo para la respuesta de datos del estudiante
- * GET /api/movil/estudiantes
+ * 🔴 CAMBIO BREAKING (13/Feb/2026): Backend SIEMPRE retorna array
+ * Estructura actual del backend:
+ * SIEMPRE → { "data": { "estudiantes": [...] } }
+ * El campo "estudiante" (singular) YA NO EXISTE
  */
 public class EstudianteInfo {
-    @SerializedName("estudiante")
-    private EstudianteDetalle estudiante;
+
+    @SerializedName("estudiantes")
+    private List<EstudianteDetalle> estudiantes;
+
+    // ❌ CAMPO REMOVIDO - El backend ya no envía "estudiante" singular
+    // @SerializedName("estudiante")
+    // private EstudianteDetalle estudiante;
 
     // Getters y Setters
-    public EstudianteDetalle getEstudiante() {
-        return estudiante;
+    public List<EstudianteDetalle> getEstudiantes() {
+        return estudiantes != null ? estudiantes : new java.util.ArrayList<>();
     }
 
-    public void setEstudiante(EstudianteDetalle estudiante) {
-        this.estudiante = estudiante;
+    public void setEstudiantes(List<EstudianteDetalle> estudiantes) {
+        this.estudiantes = estudiantes;
     }
+
+    /**
+     * ✅ MÉTODO ACTUALIZADO: Ahora simplemente retorna la lista
+     * ya que el backend siempre envía array
+     */
+    public List<EstudianteDetalle> getTodosLosEstudiantes() {
+        return getEstudiantes();
+    }
+
+    /**
+     * ✅ MÉTODO NUEVO: Para obtener el primer estudiante cuando hay solo uno
+     */
+    public EstudianteDetalle getPrimerEstudiante() {
+        List<EstudianteDetalle> lista = getEstudiantes();
+        return lista.isEmpty() ? null : lista.get(0);
+    }
+
+    // ...existing code...
 
     // Clase interna para el detalle del estudiante
     public static class EstudianteDetalle {

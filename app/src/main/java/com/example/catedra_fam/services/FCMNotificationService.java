@@ -13,8 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
-import com.example.catedra_fam.LoginActivity;
 import com.example.catedra_fam.MainActivity;
+import com.example.catedra_fam.NotificacionesActivity;
 import com.example.catedra_fam.R;
 import com.example.catedra_fam.TareaDetalleActivity;
 import com.example.catedra_fam.api.RetrofitClient;
@@ -22,36 +22,43 @@ import com.example.catedra_fam.models.DeviceInfo;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
-import java.util.Arrays;
-import java.util.Map;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+/**
+ * Servicio FCM para recibir notificaciones push
+ * Implementación 100% alineada con especificaciones del backend
+ */
 public class FCMNotificationService extends FirebaseMessagingService {
 
     private static final String TAG = "FCMNotificationService";
-    
-    // Canales de notificación
-    public static final String TAREAS_CHANNEL = "tareas_channel";
-    public static final String URGENT_CHANNEL = "urgent_channel";
-    public static final String GENERAL_CHANNEL = "general_channel";
+
+    // Canales de notificación según especificación backend
+    public static final String CATEDRA_FAMILIA_CHANNEL = "catedra_familia_channel";
+    public static final String CHANNEL_NAME = "Cátedra Familia";
+    public static final String CHANNEL_DESCRIPTION = "Notificaciones de tareas y eventos";
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        createNotificationChannel();
+    }
 
     @Override
     public void onNewToken(@NonNull String token) {
         super.onNewToken(token);
-        Log.d(TAG, "FCM Token refreshed: " + token);
-        
+        Log.d(TAG, "Nuevo FCM token: " + token);
+
         // 📱 MOSTRAR NUEVO TOKEN PARA DESARROLLO
         Log.d("TOKEN_FCM_COPIAR", "====================================");
         Log.d("TOKEN_FCM_COPIAR", "NUEVO TOKEN FCM PARA COPIAR:");
         Log.d("TOKEN_FCM_COPIAR", token);
         Log.d("TOKEN_FCM_COPIAR", "====================================");
-        
+
         // Guardar token localmente
         saveTokenLocally(token);
-        
+
         // Registrar token en backend si hay sesión activa
         registerTokenWithBackend(token);
     }
@@ -59,252 +66,272 @@ public class FCMNotificationService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
-        
-        Log.d(TAG, "Message received from: " + remoteMessage.getFrom());
-        
-        // Manejar notificación con datos
-        if (remoteMessage.getData().size() > 0) {
-            // Convertir Map<String,String> a Bundle
-            android.os.Bundle data = new android.os.Bundle();
-            for (Map.Entry<String, String> entry : remoteMessage.getData().entrySet()) {
-                data.putString(entry.getKey(), entry.getValue());
-            }
-            handleDataMessage(data);
-        }
-        
-        // Manejar notificación con payload
+        Log.d(TAG, "Mensaje FCM recibido de: " + remoteMessage.getFrom());
+
+        // Incrementar contador de notificaciones no leídas
+        incrementNotificationCounter();
+
+        // Extraer datos según especificación backend
+        String title = "Nueva notificación";
+        String body = "";
+
         if (remoteMessage.getNotification() != null) {
-            handleNotificationMessage(remoteMessage.getNotification());
+            title = remoteMessage.getNotification().getTitle();
+            body = remoteMessage.getNotification().getBody();
         }
+
+        // Datos específicos según documentación backend
+        String tipo = remoteMessage.getData().get("tipo");
+        String targetId = remoteMessage.getData().get("target_id");
+        String estudianteId = remoteMessage.getData().get("estudiante_id");
+
+        Log.d(TAG, "Tipo: " + tipo + ", Target ID: " + targetId + ", Estudiante ID: " + estudianteId);
+
+        // Mostrar notificación según tipo
+        showNotificationByType(title, body, tipo, targetId, estudianteId);
     }
 
-    private void handleDataMessage(android.os.Bundle data) {
-        String tipo = data.getString("tipo", "general");
-        String titulo = data.getString("title", data.getString("titulo", "Notificación"));
-        String cuerpo = data.getString("body", data.getString("cuerpo", "Tienes una nueva notificación"));
-        
-        Log.d(TAG, "Data message - Tipo: " + tipo + ", Título: " + titulo);
-        
-        switch (tipo) {
+    /**
+     * Maneja diferentes tipos de notificación según especificación backend
+     */
+    private void showNotificationByType(String title, String body, String tipo, String targetId, String estudianteId) {
+        Intent intent = createIntentForNotificationType(tipo, targetId, estudianteId);
+        int notificationId = (int) System.currentTimeMillis();
+
+        // Personalizar según tipo
+        switch (tipo != null ? tipo : "general") {
             case "tarea":
-                handleTareaNotification(data);
+                showNotification(
+                    title != null ? title : "📚 Nueva tarea asignada",
+                    body != null ? body : "Tienes una nueva tarea pendiente",
+                    notificationId,
+                    intent
+                );
                 break;
+
+            case "tarea_entregada":
+                showNotification(
+                    title != null ? title : "✅ Tarea entregada",
+                    body != null ? body : "Tu tarea ha sido recibida correctamente",
+                    notificationId,
+                    intent
+                );
+                break;
+
+            case "tarea_vencida":
+                showNotification(
+                    title != null ? title : "⏰ Tarea próxima a vencer",
+                    body != null ? body : "Tienes una tarea que vence pronto",
+                    notificationId,
+                    intent
+                );
+                break;
+
+            case "calificacion":
+                showNotification(
+                    title != null ? title : "🏆 Nueva calificación",
+                    body != null ? body : "Has recibido una nueva calificación",
+                    notificationId,
+                    intent
+                );
+                break;
+
             case "evento":
-                handleEventoNotification(data);
+                showNotification(
+                    title != null ? title : "📅 Nuevo evento",
+                    body != null ? body : "Hay un nuevo evento escolar",
+                    notificationId,
+                    intent
+                );
                 break;
+
+            case "recordatorio":
+                showNotification(
+                    title != null ? title : "🔔 Recordatorio",
+                    body != null ? body : "Tienes un recordatorio importante",
+                    notificationId,
+                    intent
+                );
+                break;
+
             default:
-                handleGeneralNotification(titulo, cuerpo);
+                showNotification(
+                    title != null ? title : "📱 Nueva notificación",
+                    body != null ? body : "Tienes una nueva actualización",
+                    notificationId,
+                    intent
+                );
                 break;
         }
     }
 
-    private void handleTareaNotification(android.os.Bundle data) {
-        String subtipo = data.getString("subtipo", "general");
-        String asignacionIdStr = data.getString("asignacion_id");
-        Integer asignacionId = asignacionIdStr != null ? Integer.parseInt(asignacionIdStr) : null;
-        
-        switch (subtipo) {
-            case "nueva_tarea":
-                showTareaNotification(
-                    "📚 Nueva Tarea",
-                    data.getString("cuerpo", "Se asignó una nueva tarea"),
-                    asignacionId
-                );
+    /**
+     * Crea intent de navegación según el tipo de notificación
+     */
+    private Intent createIntentForNotificationType(String tipo, String targetId, String estudianteId) {
+        Intent intent;
+
+        switch (tipo != null ? tipo : "general") {
+            case "tarea":
+                if (targetId != null) {
+                    intent = new Intent(this, TareaDetalleActivity.class);
+                    intent.putExtra("TAREA_ID", targetId);
+                    if (estudianteId != null) {
+                        intent.putExtra("ESTUDIANTE_ID", estudianteId);
+                    }
+                } else {
+                    intent = new Intent(this, MainActivity.class);
+                    intent.putExtra("OPEN_TAREAS", true);
+                }
                 break;
-            case "proxima_vencer":
-                showUrgentNotification(
-                    "⏰ Tarea por Vencer",
-                    data.getString("cuerpo", "Una tarea está por vencer"),
-                    asignacionId
-                );
+
+            case "tarea_entregada":
+            case "tarea_vencida":
+                intent = new Intent(this, MainActivity.class);
+                intent.putExtra("OPEN_TAREAS", true);
+                if (estudianteId != null) {
+                    intent.putExtra("ESTUDIANTE_ID", estudianteId);
+                }
                 break;
-            case "calificada":
-                showCalificacionNotification(data);
+
+            case "calificacion":
+                intent = new Intent(this, MainActivity.class);
+                intent.putExtra("OPEN_HISTORIAL", true);
+                if (estudianteId != null) {
+                    intent.putExtra("ESTUDIANTE_ID", estudianteId);
+                }
                 break;
-            case "vencida":
-                showUrgentNotification(
-                    "❌ Tarea Vencida",
-                    data.getString("cuerpo", "Una tarea ha vencido"),
-                    asignacionId
-                );
+
+            case "evento":
+            case "recordatorio":
+                intent = new Intent(this, NotificacionesActivity.class);
                 break;
+
             default:
-                handleGeneralNotification("📋 Tarea", data.getString("cuerpo", "Actualización de tarea"));
+                intent = new Intent(this, MainActivity.class);
                 break;
         }
+
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        return intent;
     }
 
-    private void handleEventoNotification(android.os.Bundle data) {
-        String titulo = data.getString("titulo", "📅 Evento");
-        String cuerpo = data.getString("cuerpo", "Tienes un nuevo evento");
-        
-        showGeneralNotification(titulo, cuerpo, GENERAL_CHANNEL);
-    }
-
-    private void handleGeneralNotification(String titulo, String cuerpo) {
-        showGeneralNotification(titulo, cuerpo, GENERAL_CHANNEL);
-    }
-
-    private void handleNotificationMessage(RemoteMessage.Notification notification) {
-        String titulo = notification.getTitle();
-        String cuerpo = notification.getBody();
-        
-        showGeneralNotification(titulo, cuerpo, GENERAL_CHANNEL);
-    }
-
-    private void showTareaNotification(String title, String body, Integer asignacionId) {
-        Intent intent = new Intent(this, TareaDetalleActivity.class);
-        if (asignacionId != null) {
-            intent.putExtra("TAREA_ID", asignacionId);
-        }
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        
-        showNotification(title, body, TAREAS_CHANNEL, asignacionId != null ? asignacionId : 0, intent);
-    }
-
-    private void showUrgentNotification(String title, String body, Integer asignacionId) {
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        
-        showNotification(title, body, URGENT_CHANNEL, asignacionId != null ? asignacionId : 1000, intent);
-    }
-
-    private void showCalificacionNotification(android.os.Bundle data) {
-        String titulo = "🌟 Calificación Disponible";
-        String cuerpo = data.getString("cuerpo", "Una tarea ha sido calificada");
-        Integer asignacionId = data.getString("asignacion_id") != null ? 
-            Integer.parseInt(data.getString("asignacion_id")) : null;
-        
-        Intent intent = new Intent(this, TareaDetalleActivity.class);
-        if (asignacionId != null) {
-            intent.putExtra("TAREA_ID", asignacionId);
-        }
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        
-        showNotification(titulo, cuerpo, TAREAS_CHANNEL, asignacionId != null ? asignacionId : 0, intent);
-    }
-
-    private void showGeneralNotification(String title, String body, String channel) {
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        
-        showNotification(title, body, channel, 9999, intent);
-    }
-
-    private void showNotification(String title, String body, String channel, int notificationId, Intent intent) {
-        createNotificationChannels();
-        
+    /**
+     * Muestra notificación usando el canal único
+     */
+    private void showNotification(String title, String body, int notificationId, Intent intent) {
         PendingIntent pendingIntent = PendingIntent.getActivity(
-            this, 0, intent,
+            this,
+            0,
+            intent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
-        
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channel)
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CATEDRA_FAMILIA_CHANNEL)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(body)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pendingIntent)
             .setAutoCancel(true)
-            .setContentIntent(pendingIntent);
-        
-        // Configuración específica para canal urgente
-        if (URGENT_CHANNEL.equals(channel)) {
-            builder.setVibrate(new long[]{0, 500, 200, 500});
-        }
-        
+            .setVibrate(new long[]{0, 250, 250, 250})
+            .setShowWhen(true);
+
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-        
+
         // Verificar permisos para Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (notificationManager.areNotificationsEnabled()) {
                 notificationManager.notify(notificationId, builder.build());
+                Log.d(TAG, "Notificación mostrada: " + title);
             } else {
-                Log.w(TAG, "Notifications not enabled");
+                Log.w(TAG, "Notificaciones no habilitadas");
             }
         } else {
             notificationManager.notify(notificationId, builder.build());
+            Log.d(TAG, "Notificación mostrada: " + title);
         }
     }
 
-    private void createNotificationChannels() {
+    /**
+     * Crea canal de notificación único según especificación backend
+     */
+    private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            // Canal de Tareas
-            NotificationChannel tareasChannel = new NotificationChannel(
-                TAREAS_CHANNEL,
-                "Tareas",
+            NotificationChannel channel = new NotificationChannel(
+                CATEDRA_FAMILIA_CHANNEL,
+                CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_HIGH
             );
-            tareasChannel.setDescription("Notificaciones sobre tareas asignadas y calificaciones");
-            tareasChannel.enableLights(true);
-            tareasChannel.setLightColor(android.graphics.Color.BLUE);
-            
-            // Canal Urgente
-            NotificationChannel urgentChannel = new NotificationChannel(
-                URGENT_CHANNEL,
-                "Urgentes",
-                NotificationManager.IMPORTANCE_HIGH
-            );
-            urgentChannel.setDescription("Notificaciones urgentes de tareas vencidas");
-            urgentChannel.enableVibration(true);
-            urgentChannel.enableLights(true);
-            urgentChannel.setLightColor(android.graphics.Color.RED);
-            
-            // Canal General
-            NotificationChannel generalChannel = new NotificationChannel(
-                GENERAL_CHANNEL,
-                "General",
-                NotificationManager.IMPORTANCE_DEFAULT
-            );
-            generalChannel.setDescription("Notificaciones generales de la aplicación");
-            
+            channel.setDescription(CHANNEL_DESCRIPTION);
+            channel.enableVibration(true);
+            channel.setVibrationPattern(new long[]{0, 250, 250, 250});
+            channel.setShowBadge(true);
+            channel.enableLights(true);
+
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannels(Arrays.asList(
-                tareasChannel, urgentChannel, generalChannel
-            ));
+            notificationManager.createNotificationChannel(channel);
+
+            Log.d(TAG, "Canal de notificación creado: " + CATEDRA_FAMILIA_CHANNEL);
         }
     }
 
-    private void saveTokenLocally(String token) {
-        SharedPreferences prefs = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
-        prefs.edit().putString("FCM_TOKEN", token).apply();
+    /**
+     * Incrementa el contador de notificaciones no leídas
+     */
+    private void incrementNotificationCounter() {
+        SharedPreferences prefs = getSharedPreferences("notification_counter", MODE_PRIVATE);
+        int current = prefs.getInt("unread_count", 0);
+        prefs.edit()
+            .putInt("unread_count", current + 1)
+            .putLong("last_sync", System.currentTimeMillis())
+            .apply();
+
+        Log.d(TAG, "Contador notificaciones incrementado: " + (current + 1));
     }
 
+    /**
+     * Guarda token FCM localmente
+     */
+    private void saveTokenLocally(String token) {
+        SharedPreferences prefs = getSharedPreferences("fcm_prefs", MODE_PRIVATE);
+        prefs.edit().putString("fcm_token", token).apply();
+        Log.d(TAG, "Token FCM guardado localmente");
+    }
+
+    /**
+     * Registra token en backend si hay sesión activa
+     */
     private void registerTokenWithBackend(String token) {
-        // Verificar si hay sesión activa
-        SharedPreferences prefs = getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
-        String authToken = prefs.getString("AUTH_TOKEN", null);
-        
+        SharedPreferences prefs = getSharedPreferences("auth_prefs", MODE_PRIVATE);
+        String authToken = prefs.getString("auth_token", null);
+
         if (authToken != null) {
-            // Crear información del dispositivo
             DeviceInfo deviceInfo = new DeviceInfo(
                 token,
-                "android",
-                "1.0", // Versión hardcoded temporalmente
                 android.os.Build.MODEL,
-                android.os.Build.VERSION.RELEASE
+                "android",
+                "1.0.0"
             );
-            
-            // Registrar token en backend
-            RetrofitClient.getApiService(this).registerFCMToken(
-                "Bearer " + authToken,
-                deviceInfo
-            ).enqueue(new Callback<Void>() {
-                @Override
-                public void onResponse(Call<Void> call, Response<Void> response) {
-                    if (response.isSuccessful()) {
-                        Log.d(TAG, "FCM Token registered successfully");
-                    } else {
-                        Log.e(TAG, "Failed to register FCM token: " + response.code());
+
+            RetrofitClient.getApiService(this).registerFCMToken("Bearer " + authToken, deviceInfo)
+                .enqueue(new Callback<Void>() {
+                    @Override
+                    public void onResponse(Call<Void> call, Response<Void> response) {
+                        if (response.isSuccessful()) {
+                            Log.d(TAG, "✅ Token FCM registrado exitosamente en backend");
+                        } else {
+                            Log.w(TAG, "⚠️ Error registrando token FCM: " + response.code());
+                        }
                     }
-                }
-                
-                @Override
-                public void onFailure(Call<Void> call, Throwable t) {
-                    Log.e(TAG, "Error registering FCM token", t);
-                }
-            });
+
+                    @Override
+                    public void onFailure(Call<Void> call, Throwable t) {
+                        Log.d(TAG, "⚠️ No se pudo registrar token FCM: " + t.getMessage());
+                    }
+                });
         } else {
-            Log.d(TAG, "No active session, token will be registered on login");
+            Log.d(TAG, "No hay sesión activa, token se registrará en el próximo login");
         }
     }
 }

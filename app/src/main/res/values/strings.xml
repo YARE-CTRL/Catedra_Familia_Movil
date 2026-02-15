@@ -99,10 +99,10 @@
 
     <!-- Tareas -->
     <string name="tareas_titulo">Tareas de %1$s</string>
-    <string name="tareas_filtro_todas">Todas</string>
-    <string name="tareas_filtro_pendientes">Pendientes</string>
-    <string name="tareas_filtro_completadas">Completadas</string>
-    <string name="tareas_filtro_calificadas">Calificadas</string>
+    <string name="tareas_filtro_todas">Todas (%1$d)</string>
+    <string name="tareas_filtro_pendientes">Pendientes (%1$d)</string>
+    <string name="tareas_filtro_completadas">Entregadas (%1$d)</string>
+    <string name="tareas_filtro_calificadas">Calificadas (%1$d)</string>
     <string name="tareas_vacio_titulo">No hay tareas</string>
     <string name="tareas_vacio_mensaje">Las tareas asignadas aparecerán aquí</string>
     <string name="estado_pendiente">Pendiente</string>
@@ -132,6 +132,18 @@
     <string name="frecuencia_semanal">Semanal</string>
     <string name="frecuencia_quincenal">Quincenal</string>
     <string name="frecuencia_mensual">Mensual</string>
+    <string name="loading_task_info">Cargando información de la tarea...</string>
+    <string name="task_expired">Tarea vencida</string>
+    <string name="deliver_now">Entregar ahora</string>
+    <string name="next_due">Próxima a vencer</string>
+    <string name="delivered_review">Entregada - En revisión por el docente</string>
+    <string name="task_graded">Tarea calificada</string>
+    <string name="grade_label">Nota: %1$s</string>
+    <string name="no_teacher_comments">Sin comentarios del docente</string>
+    <string name="not_graded">Sin calificar</string>
+    <string name="no_feedback">Aún sin retroalimentación</string>
+    <string name="sending">Enviando...</string>
+    <string name="send_evidence">ENVIAR EVIDENCIA</string>
 
     <!-- Accesibilidad -->
     <string name="desc_hijo_card">Información de %1$s. %2$d tareas pendientes</string>

@@ -203,13 +203,47 @@ public class Notificacion {
     }
 
     private String formatearTiempoRelativo(String fechaISO) {
-        // Implementación simple - en producción usa una librería
+        // ✅ IMPLEMENTACIÓN REAL - Cálculo de tiempo relativo
         try {
-            // Por ahora retorna la fecha tal cual
-            // TODO: Implementar cálculo de "hace X minutos/horas/días"
-            return "Reciente";
+            if (fechaISO == null || fechaISO.isEmpty()) {
+                return "Reciente";
+            }
+
+            // Parser para formato ISO del backend: "2026-02-14T15:30:00.000-05:00"
+            java.text.SimpleDateFormat parser = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", java.util.Locale.getDefault());
+            java.util.Date fechaNotificacion = parser.parse(fechaISO);
+
+            if (fechaNotificacion == null) {
+                return "Reciente";
+            }
+
+            long tiempoActual = System.currentTimeMillis();
+            long tiempoNotificacion = fechaNotificacion.getTime();
+            long diferenciaMilis = tiempoActual - tiempoNotificacion;
+
+            // Convertir a diferentes unidades de tiempo
+            long segundos = diferenciaMilis / 1000;
+            long minutos = segundos / 60;
+            long horas = minutos / 60;
+            long dias = horas / 24;
+
+            // Formatear según el tiempo transcurrido
+            if (segundos < 60) {
+                return segundos <= 5 ? "Ahora mismo" : "Hace " + segundos + " seg";
+            } else if (minutos < 60) {
+                return "Hace " + minutos + " min";
+            } else if (horas < 24) {
+                return "Hace " + horas + " h";
+            } else if (dias < 7) {
+                return "Hace " + dias + (dias == 1 ? " día" : " días");
+            } else {
+                // Para fechas muy antiguas, mostrar fecha formateada
+                java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("dd MMM", java.util.Locale.getDefault());
+                return formatter.format(fechaNotificacion);
+            }
         } catch (Exception e) {
-            return "";
+            android.util.Log.e("Notificacion", "Error formateando tiempo relativo: " + e.getMessage());
+            return "Reciente";
         }
     }
 
