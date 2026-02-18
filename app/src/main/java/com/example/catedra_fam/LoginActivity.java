@@ -260,12 +260,13 @@ public class LoginActivity extends AppCompatActivity {
             Log.d("TOKEN_FCM_COPIAR", fcmToken);
             Log.d("TOKEN_FCM_COPIAR", "====================================");
             
-            // Crear información del dispositivo
+            // ✅ Crear información del dispositivo con campo plataforma actualizado
             DeviceInfo deviceInfo = new DeviceInfo(
                 fcmToken,
-                android.os.Build.MODEL,           // dispositivo
-                "android",                        // sistemaOperativo
-                "1.0.0"                          // versionApp
+                android.os.Build.MODEL,           // dispositivo: "moto e40"
+                "Android",                        // ✅ plataforma: "Android" (capitalizado)
+                "android",                        // sistemaOperativo: "android" (legacy)
+                "1.0.0"                          // versionApp: "1.0.0"
             );
             
             // Registrar token en backend
@@ -274,9 +275,9 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(retrofit2.Call<Void> call, retrofit2.Response<Void> response) {
                         if (response.isSuccessful()) {
-                            android.util.Log.d("LoginActivity", "FCM Token registrado exitosamente");
+                            android.util.Log.d("LoginActivity", "✅ FCM Token registrado exitosamente en backend");
                         } else {
-                            android.util.Log.e("LoginActivity", "Error registrando FCM token: " + response.code());
+                            android.util.Log.e("LoginActivity", "⚠️ Error registrando FCM token: " + response.code());
                         }
                     }
                     
@@ -308,23 +309,37 @@ public class LoginActivity extends AppCompatActivity {
      * Este método es CRÍTICO para que las notificaciones funcionen en Android 13+
      */
     private void solicitarPermisoNotificaciones() {
+        Log.d("LoginActivity", "=== VERIFICACIÓN PERMISO NOTIFICACIONES ===");
+        Log.d("LoginActivity", "📱 Android Version: " + Build.VERSION.SDK_INT);
+        Log.d("LoginActivity", "📱 Android Release: " + Build.VERSION.RELEASE);
+        Log.d("LoginActivity", "📱 API Level requerido: " + Build.VERSION_CODES.TIRAMISU + " (Android 13)");
+
         // Solo para Android 13+ (API 33+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Log.d("LoginActivity", "✅ Android 13+ detectado, verificando permiso...");
+
             // Verificar si el permiso ya está concedido
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) 
-                != PackageManager.PERMISSION_GRANTED) {
-                
-                Log.d("LoginActivity", "Solicitando permiso de notificaciones para Android 13+");
-                
+            int permissionStatus = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS);
+            Log.d("LoginActivity", "📋 Estado permiso: " + (permissionStatus == PackageManager.PERMISSION_GRANTED ? "CONCEDIDO" : "DENEGADO"));
+
+            if (permissionStatus != PackageManager.PERMISSION_GRANTED) {
+
+                Log.d("LoginActivity", "🔔 Solicitando permiso de notificaciones...");
+
                 // Mostrar explicación (opcional pero recomendado)
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, 
-                    Manifest.permission.POST_NOTIFICATIONS)) {
-                    
+                boolean shouldShowRationale = ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.POST_NOTIFICATIONS);
+                Log.d("LoginActivity", "📝 shouldShowRationale: " + shouldShowRationale);
+
+                if (shouldShowRationale) {
+
+                    Log.d("LoginActivity", "💬 Mostrando diálogo explicativo...");
                     // Mostrar diálogo explicativo
                     new androidx.appcompat.app.AlertDialog.Builder(this)
                         .setTitle("Permiso de Notificaciones Requerido")
                         .setMessage("Para recibir alertas importantes sobre tareas y eventos de tus hijos, necesitamos tu permiso para enviar notificaciones.")
                         .setPositiveButton("Conceder", (dialog, which) -> {
+                            Log.d("LoginActivity", "✅ Usuario aceptó, solicitando permiso...");
                             // Solicitar permiso
                             ActivityCompat.requestPermissions(
                                 this,
@@ -333,12 +348,13 @@ public class LoginActivity extends AppCompatActivity {
                             );
                         })
                         .setNegativeButton("Cancelar", (dialog, which) -> {
-                            Log.w("LoginActivity", "Usuario denegó permiso de notificaciones");
+                            Log.w("LoginActivity", "❌ Usuario canceló permiso de notificaciones");
                             DialogHelper.showInfoDialog(this, "Permiso de Notificaciones", "No podrás recibir notificaciones importantes");
                         })
                         .show();
                 } else {
                     // Solicitar permiso directamente (sin explicación)
+                    Log.d("LoginActivity", "🔔 Solicitando permiso directamente (sin diálogo)...");
                     ActivityCompat.requestPermissions(
                         this,
                         new String[]{Manifest.permission.POST_NOTIFICATIONS},
@@ -346,12 +362,14 @@ public class LoginActivity extends AppCompatActivity {
                     );
                 }
             } else {
-                Log.d("LoginActivity", "Permiso de notificaciones ya concedido");
+                Log.d("LoginActivity", "✅ Permiso de notificaciones ya concedido");
             }
         } else {
             // Para Android < 13, el permiso no se solicita en runtime
-            Log.d("LoginActivity", "Android < 13, no se requiere permiso runtime para notificaciones");
+            Log.d("LoginActivity", "⚠️ Android " + Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ") - El permiso de notificaciones NO requiere solicitud en runtime");
+            Log.d("LoginActivity", "✅ Las notificaciones se habilitan automáticamente desde el AndroidManifest.xml");
         }
+        Log.d("LoginActivity", "=== FIN VERIFICACIÓN ===");
     }
 
     /**

@@ -144,10 +144,10 @@ public interface ApiService {
 
     /**
      * RF-MO-009: Sincronización offline - Enviar entregas pendientes
-     * POST /asignaciones/:id/entregas/sync
+     * POST /movil/asignaciones/:id/entregas/sync
      */
     @Multipart
-    @POST("asignaciones/{id}/entregas/sync")
+    @POST("movil/asignaciones/{id}/entregas/sync")
     Call<ApiResponse<Entrega>> sincronizarEntrega(
         @Path("id") int asignacionId,
         @Part("estudianteId") RequestBody estudianteId,
@@ -158,9 +158,9 @@ public interface ApiService {
 
     /**
      * RF-MO-009: Sincronización offline - Obtener tareas actualizadas
-     * GET /estudiantes/:id/tareas/sync
+     * GET /movil/estudiantes/:id/tareas/sync
      */
-    @GET("estudiantes/{id}/tareas/sync")
+    @GET("movil/estudiantes/{id}/tareas/sync")
     Call<ApiResponse<List<TareaLista>>> sincronizarTareas(
         @Path("id") int estudianteId,
         @Query("ultimaSync") String ultimaSincronizacion // ISO 8601 format
@@ -170,9 +170,9 @@ public interface ApiService {
 
     /**
      * RF-MO-010: Historial de entregas y calificaciones
-     * GET /estudiantes/:id/historial
+     * GET /movil/estudiantes/:id/historial - Ruta corregida con prefijo movil/
      */
-    @GET("estudiantes/{id}/historial")
+    @GET("movil/estudiantes/{id}/historial")
     Call<ApiResponse<HistorialResponse>> getHistorial(
         @Path("id") int estudianteId,
         @Query("periodoId") Integer periodoId
@@ -180,25 +180,25 @@ public interface ApiService {
 
     /**
      * RF-MO-011: Estadísticas del estudiante
-     * GET /estudiantes/:id/estadisticas
+     * GET /movil/estudiantes/:id/estadisticas
      */
-    @GET("estudiantes/{id}/estadisticas")
+    @GET("movil/estudiantes/{id}/estadisticas")
     Call<ApiResponse<Estadisticas>> getEstadisticas(@Path("id") int estudianteId);
 
     /**
      * RF-MO-012: Mis estudiantes (hijos del acudiente) - ENDPOINT CORREGIDO
-     * GET /acudientes/mis-estudiantes - ALIAS CREADO POR BACKEND
+     * GET /movil/acudientes/mis-estudiantes - Ruta con prefijo movil/
      * Estructura: { success: true, data: { estudiante: {...} } } para 1 estudiante
      *            { success: true, data: { estudiantes: [...] } } para múltiples
      */
-    @GET("acudientes/mis-estudiantes")
+    @GET("movil/acudientes/mis-estudiantes")
     Call<ApiResponse<EstudianteInfo>> getMisEstudiantes();
 
     /**
      * RF-MO-013: Perfil completo de un estudiante
-     * GET /estudiantes/:id/perfil
+     * GET /movil/estudiantes/:id/perfil
      */
-    @GET("estudiantes/{id}/perfil")
+    @GET("movil/estudiantes/{id}/perfil")
     Call<ApiResponse<Estudiante>> getPerfilEstudiante(@Path("id") int estudianteId);
 
     // ========== RF-MO-014 a RF-MO-016: NOTIFICACIONES ==========
@@ -255,27 +255,27 @@ public interface ApiService {
 
     /**
      * RF-MO-017: Obtener preferencias del usuario
-     * GET /usuarios/preferencias
+     * GET /movil/usuarios/preferencias
      * ✅ ACTUALIZADO: Estructura anidada data.notificaciones.{tipos}
      */
-    @GET("usuarios/preferencias")
+    @GET("movil/usuarios/preferencias")
     Call<PreferenciasResponse> getPreferencias();
 
     /**
      * RF-MO-017: Actualizar preferencias del usuario
-     * PUT /usuarios/preferencias
+     * PUT /movil/usuarios/preferencias
      * ✅ ACTUALIZADO: Permite updates parciales, estructura anidada
      */
-    @PUT("usuarios/preferencias")
+    @PUT("movil/usuarios/preferencias")
     Call<ApiResponse<PreferenciasResponse.PreferenciasData>> actualizarPreferencias(@Body Map<String, Object> preferencias);
 
     // ========== RF-MO-018: SOPORTE ==========
 
     /**
      * RF-MO-018: Información de soporte (FAQs, contacto)
-     * GET /soporte/info
+     * GET /movil/soporte/info
      */
-    @GET("soporte/info")
+    @GET("movil/soporte/info")
     Call<ApiResponse<Map<String, Object>>> getInfoSoporte();
 
     // Fin de la interfaz ApiService

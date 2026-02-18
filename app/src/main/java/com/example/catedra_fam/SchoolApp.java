@@ -64,19 +64,25 @@ public class SchoolApp extends Application {
      * Configura worker periódico para sincronización de notificaciones
      */
     private void setupPeriodicSync() {
-        // Configurar constraints para el worker
+        // ✅ Configurar constraints para el worker
         Constraints constraints = new Constraints.Builder()
             .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
             .setRequiresBatteryNotLow(true)
             .build();
         
-        // Crear solicitud de trabajo periódico (cada 15 minutos)
+        // ✅ Crear solicitud de trabajo periódico (cada 15 minutos)
+        // Con backoff policy para manejar timeouts del servidor
         PeriodicWorkRequest syncRequest = new PeriodicWorkRequest.Builder(
             NotificationSyncWorker.class,
             15, // Repetir cada 15 minutos
             TimeUnit.MINUTES
         )
         .setConstraints(constraints)
+        .setBackoffCriteria(
+            androidx.work.BackoffPolicy.EXPONENTIAL,  // ✅ Backoff exponencial
+            30,                                        // ✅ Inicial: 30 segundos
+            TimeUnit.SECONDS
+        )
         .build();
         
         // Enviar worker a WorkManager
@@ -86,6 +92,6 @@ public class SchoolApp extends Application {
             syncRequest
         );
         
-        Log.d(TAG, "Periodic notification sync worker scheduled");
+        Log.d(TAG, "✅ Periodic notification sync worker scheduled (15min interval, exponential backoff)");
     }
 }

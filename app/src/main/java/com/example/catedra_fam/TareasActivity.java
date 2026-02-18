@@ -299,11 +299,17 @@ public class TareasActivity extends AppCompatActivity implements TareasAdapter.O
                 android.util.Log.d("TareasActivity", "   Calificadas: " + calificadas);
                 android.util.Log.d("TareasActivity", "   Por atender: " + porAtender);
 
-                // Actualizar chips con contadores del backend
+                // ✅ CORREGIDO: Actualizar chips con contadores correctos
                 chipTodas.setText(getString(R.string.tareas_filtro_todas, total));
-                chipPendientes.setText("Pendientes (" + porAtender + ")");  // Usar porAtender que incluye vencidas
+                chipPendientes.setText("Pendientes (" + pendientes + ")");  // ✅ Solo pendientes, NO por atender
                 chipCompletadas.setText(getString(R.string.tareas_filtro_completadas, entregadas));
                 chipCalificadas.setText(getString(R.string.tareas_filtro_calificadas, calificadas));
+
+                android.util.Log.d("TareasActivity", "✅ Chips actualizados:");
+                android.util.Log.d("TareasActivity", "   Todas: " + total);
+                android.util.Log.d("TareasActivity", "   Pendientes: " + pendientes + " (NO " + porAtender + ")");
+                android.util.Log.d("TareasActivity", "   Completadas: " + entregadas);
+                android.util.Log.d("TareasActivity", "   Calificadas: " + calificadas);
 
                 return; // Salir early si se procesó correctamente
             }

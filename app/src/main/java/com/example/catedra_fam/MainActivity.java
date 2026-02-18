@@ -745,19 +745,23 @@ Toast.makeText(this, "Token FCM copiado en LogCat", Toast.LENGTH_LONG).show();
     }
 
     private void registrarFCMToken(String fcmToken, String authToken) {
+        // ✅ Crear DeviceInfo con campo plataforma actualizado (Fix Backend 16-Feb-2026)
         DeviceInfo deviceInfo = new DeviceInfo(
             fcmToken,
-            android.os.Build.MODEL,           // dispositivo
-            "android",                        // sistemaOperativo
-            "1.0.0"                          // versionApp (actualizada)
+            android.os.Build.MODEL,           // dispositivo: "moto e40"
+            "Android",                        // ✅ plataforma: "Android" (capitalizado)
+            "android",                        // sistemaOperativo: "android" (legacy)
+            "1.0.0"                          // versionApp actualizada
         );
-        
+
+        Log.d("MainActivity", "📡 Registrando token FCM: " + deviceInfo.toString());
+
         apiService.registerFCMToken("Bearer " + authToken, deviceInfo)
             .enqueue(new retrofit2.Callback<Void>() {
                 @Override
                 public void onResponse(retrofit2.Call<Void> call, retrofit2.Response<Void> response) {
                     if (response.isSuccessful()) {
-                        Log.d("MainActivity", "✅ FCM Token registrado exitosamente");
+                        Log.d("MainActivity", "✅ FCM Token registrado exitosamente en backend");
                     } else if (response.code() == 404) {
                         Log.d("MainActivity", "⚠️ Endpoint FCM no implementado aún - token guardado localmente");
                         // Token se guarda en SharedPreferences para intentar registrar más tarde
@@ -880,8 +884,9 @@ Toast.makeText(this, "Token FCM copiado en LogCat", Toast.LENGTH_LONG).show();
      * Según especificación backend: GET /api/movil/notificaciones?leida=false
      */
     private void cargarContadorNotificaciones() {
-        String authToken = getSharedPreferences("auth_prefs", MODE_PRIVATE)
-            .getString("auth_token", null);
+        // ✅ CORREGIDO: Usar "AppPrefs" y "AUTH_TOKEN" (16 Feb 2026)
+        String authToken = getSharedPreferences("AppPrefs", MODE_PRIVATE)
+            .getString("AUTH_TOKEN", null);
 
         if (authToken == null) return;
 
@@ -972,71 +977,72 @@ Toast.makeText(this, "Token FCM copiado en LogCat", Toast.LENGTH_LONG).show();
             return;
         }
 
-        Log.d("MainActivity", "🔄 Cargando estadísticas desde endpoint optimizado para: " + hijo.getNombreCompleto());
-        Log.d("MainActivity", "📡 Llamando API: /movil/estudiantes/" + hijo.getId() + "/estadisticas");
+        Log.d("MainActivity", "🔄 Cargando estadísticas para: " + hijo.getNombreCompleto());
+        Log.d("MainActivity", "📡 Llamando API: /movil/estudiantes/" + hijo.getId() + "/tareas (mismo que TareasActivity)");
 
-        // Usar el nuevo endpoint de estadísticas
-        apiService.getEstadisticasTareas(hijo.getId()).enqueue(new Callback<ApiResponse<EstadisticasTareas>>() {
+        // ✅ NUEVO: Usar el endpoint de tareas que incluye meta con contadores correctos
+        apiService.getTareas(hijo.getId(), null, null).enqueue(new Callback<ApiResponse<List<TareaLista>>>() {
             @Override
-            public void onResponse(Call<ApiResponse<EstadisticasTareas>> call, Response<ApiResponse<EstadisticasTareas>> response) {
-                Log.d("MainActivity", "📡 Response estadísticas - Código: " + response.code());
+            public void onResponse(Call<ApiResponse<List<TareaLista>>> call, Response<ApiResponse<List<TareaLista>>> response) {
+                Log.d("MainActivity", "📡 Response tareas - Código: " + response.code());
 
                 if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<EstadisticasTareas> apiResponse = response.body();
+                    ApiResponse<List<TareaLista>> apiResponse = response.body();
                     Log.d("MainActivity", "📡 Response success: " + apiResponse.isSuccess());
 
-                    if (apiResponse.isSuccess() && apiResponse.getData() != null) {
-                        EstadisticasTareas estadisticas = apiResponse.getData();
+                    if (apiResponse.isSuccess()) {
+                        // ✅ Leer contadores desde el meta del backend
+                        try {
+                            Object meta = apiResponse.getMeta();
+                            if (meta instanceof java.util.Map) {
+                                @SuppressWarnings("unchecked")
+                                java.util.Map<String, Object> metaMap = (java.util.Map<String, Object>) meta;
 
-                        // Extraer datos del objeto estadísticas
-                        EstadisticasTareas.EstadisticasDetalle detalle = estadisticas.getEstadisticas();
-                        EstadisticasTareas.TotalEstadisticas total = estadisticas.getTotal();
+                                // Leer contadores directamente del backend
+                                int pendientes = getIntFromMap(metaMap, "pendientes");
+                                int vencidas = getIntFromMap(metaMap, "vencidas");
+                                int entregadas = getIntFromMap(metaMap, "entregadas");
+                                int calificadas = getIntFromMap(metaMap, "calificadas");
+                                int total = getIntFromMap(metaMap, "total");
 
-                        if (detalle != null) {
-                            // Actualizar estadísticas del hijo
-                            hijo.setTareasPendientes(detalle.getPendientes());
-                            hijo.setTareasVencidas(detalle.getVencidas());
-                            hijo.setTareasCompletadas(detalle.getCompletadas() + detalle.getEntregadas() + detalle.getCalificadas());
+                                // Calcular por atender (pendientes + vencidas)
+                                int porAtender = pendientes + vencidas;
 
-                            // Actualizar porAtender si el backend lo envía
-                            if (total != null) {
-                                int porAtenderValue = total.getPorAtender();
-                                hijo.setPorAtender(porAtenderValue);
-                                Log.d("MainActivity", "   🎯 Total por atender (BACKEND): " + porAtenderValue);
+                                // Actualizar estadísticas del hijo
+                                hijo.setTareasPendientes(pendientes);
+                                hijo.setTareasVencidas(vencidas);
+                                hijo.setTareasCompletadas(entregadas + calificadas);
+                                hijo.setPorAtender(porAtender);
+
+                                // Logs detallados
+                                Log.d("MainActivity", "📊 " + hijo.getNombreCompleto() + " - Contadores desde meta:");
+                                Log.d("MainActivity", "   📋 Pendientes: " + pendientes);
+                                Log.d("MainActivity", "   ⚠️ Vencidas: " + vencidas);
+                                Log.d("MainActivity", "   📤 Entregadas: " + entregadas);
+                                Log.d("MainActivity", "   ⭐ Calificadas: " + calificadas);
+                                Log.d("MainActivity", "   🎯 Por atender: " + porAtender);
+                                Log.d("MainActivity", "   📊 Total: " + total);
+
                             } else {
-                                Log.w("MainActivity", "   ⚠️ Total estadísticas es null - usando cálculo manual");
-                                hijo.setPorAtender(detalle.getPendientes() + detalle.getVencidas());
+                                Log.w("MainActivity", "⚠️ Meta no es un Map para " + hijo.getNombreCompleto());
+                                // Fallback: contar manualmente
+                                contarTareasManualmente(hijo, apiResponse.getData());
                             }
-
-                            // Logs detallados
-                            Log.d("MainActivity", "📊 " + hijo.getNombreCompleto() + " - Estadísticas recibidas:");
-                            Log.d("MainActivity", "   📋 Pendientes: " + detalle.getPendientes());
-                            Log.d("MainActivity", "   ⚠️ Vencidas: " + detalle.getVencidas());
-                            Log.d("MainActivity", "   ✅ Completadas: " + detalle.getCompletadas());
-                            Log.d("MainActivity", "   📤 Entregadas: " + detalle.getEntregadas());
-                            Log.d("MainActivity", "   ⭐ Calificadas: " + detalle.getCalificadas());
-
-                            if (total != null) {
-                                Log.d("MainActivity", "   🎯 Total por atender: " + total.getPorAtender());
-                                Log.d("MainActivity", "   ✅ Total completadas: " + total.getCompletadas());
-                            }
-
-                        } else {
-                            Log.w("MainActivity", "⚠️ Objeto estadísticas es null para " + hijo.getNombreCompleto());
-                            hijo.setTareasPendientes(0);
-                            hijo.setTareasVencidas(0);
-                            hijo.setTareasCompletadas(0);
-                            hijo.setPorAtender(0);
+                        } catch (Exception e) {
+                            Log.e("MainActivity", "❌ Error procesando meta para " + hijo.getNombreCompleto(), e);
+                            // Fallback: contar manualmente
+                            contarTareasManualmente(hijo, apiResponse.getData());
                         }
+
                     } else {
-                        Log.w("MainActivity", "⚠️ Response no exitosa o data null para " + hijo.getNombreCompleto());
+                        Log.w("MainActivity", "⚠️ Response no exitosa para " + hijo.getNombreCompleto());
                         hijo.setTareasPendientes(0);
                         hijo.setTareasVencidas(0);
                         hijo.setTareasCompletadas(0);
                         hijo.setPorAtender(0);
                     }
                 } else {
-                    Log.w("MainActivity", "⚠️ Error al cargar estadísticas para " + hijo.getNombreCompleto() + " - Code: " + response.code());
+                    Log.w("MainActivity", "⚠️ Error al cargar tareas para " + hijo.getNombreCompleto() + " - Code: " + response.code());
                     if (response.errorBody() != null) {
                         try {
                             String errorBody = response.errorBody().string();
@@ -1062,8 +1068,8 @@ Toast.makeText(this, "Token FCM copiado en LogCat", Toast.LENGTH_LONG).show();
             }
 
             @Override
-            public void onFailure(Call<ApiResponse<EstadisticasTareas>> call, Throwable t) {
-                Log.e("MainActivity", "❌ Fallo al cargar estadísticas para " + hijo.getNombreCompleto(), t);
+            public void onFailure(Call<ApiResponse<List<TareaLista>>> call, Throwable t) {
+                Log.e("MainActivity", "❌ Fallo al cargar tareas para " + hijo.getNombreCompleto(), t);
                 // Establecer valores por defecto en caso de fallo
                 hijo.setTareasPendientes(0);
                 hijo.setTareasVencidas(0);
@@ -1169,5 +1175,62 @@ Toast.makeText(this, "Token FCM copiado en LogCat", Toast.LENGTH_LONG).show();
         Log.d("MainActivity", "   ⚠️ Vencidas: " + hijo.getTareasVencidas());
         Log.d("MainActivity", "   ✅ Completadas: " + hijo.getTareasCompletadas());
         Log.d("MainActivity", "   🎯 Estado: " + estadoAnterior + " → " + hijo.getEstado());
+    }
+
+    /**
+     * ✅ NUEVO: Helper para leer enteros del meta del backend
+     */
+    private int getIntFromMap(java.util.Map<String, Object> map, String key) {
+        try {
+            Object value = map.get(key);
+            if (value == null) return 0;
+            if (value instanceof Number) {
+                return ((Number) value).intValue();
+            }
+            return Integer.parseInt(value.toString());
+        } catch (Exception e) {
+            Log.w("MainActivity", "Error leyendo " + key + " del meta", e);
+            return 0;
+        }
+    }
+
+    /**
+     * ✅ NUEVO: Fallback para contar tareas manualmente si falla el meta
+     */
+    private void contarTareasManualmente(Hijo hijo, List<TareaLista> tareas) {
+        if (tareas == null) {
+            Log.w("MainActivity", "⚠️ Lista de tareas null para " + hijo.getNombreCompleto());
+            hijo.setTareasPendientes(0);
+            hijo.setTareasVencidas(0);
+            hijo.setTareasCompletadas(0);
+            hijo.setPorAtender(0);
+            return;
+        }
+
+        int pendientes = 0;
+        int vencidas = 0;
+        int completadas = 0;
+
+        for (TareaLista tarea : tareas) {
+            String estado = tarea.getEstado();
+            if ("pendiente".equals(estado)) {
+                pendientes++;
+            } else if ("vencida".equals(estado)) {
+                vencidas++;
+            } else if ("entregada".equals(estado) || "calificada".equals(estado)) {
+                completadas++;
+            }
+        }
+
+        hijo.setTareasPendientes(pendientes);
+        hijo.setTareasVencidas(vencidas);
+        hijo.setTareasCompletadas(completadas);
+        hijo.setPorAtender(pendientes + vencidas);
+
+        Log.d("MainActivity", "📊 " + hijo.getNombreCompleto() + " - Conteo manual:");
+        Log.d("MainActivity", "   📋 Pendientes: " + pendientes);
+        Log.d("MainActivity", "   ⚠️ Vencidas: " + vencidas);
+        Log.d("MainActivity", "   ✅ Completadas: " + completadas);
+        Log.d("MainActivity", "   🎯 Por atender: " + (pendientes + vencidas));
     }
 }

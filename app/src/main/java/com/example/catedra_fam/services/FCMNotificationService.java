@@ -66,12 +66,12 @@ public class FCMNotificationService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
-        Log.d(TAG, "Mensaje FCM recibido de: " + remoteMessage.getFrom());
+        Log.d(TAG, "📩 Mensaje FCM recibido de: " + remoteMessage.getFrom());
 
         // Incrementar contador de notificaciones no leídas
         incrementNotificationCounter();
 
-        // Extraer datos según especificación backend
+        // Extraer título y cuerpo de la notificación
         String title = "Nueva notificación";
         String body = "";
 
@@ -80,12 +80,42 @@ public class FCMNotificationService extends FirebaseMessagingService {
             body = remoteMessage.getNotification().getBody();
         }
 
-        // Datos específicos según documentación backend
+        // ✅ ACTUALIZADO: Extraer datos según especificación backend (16-Feb-2026)
+        // Backend envía: data: { tipo, titulo, cuerpo, datos: "{\"tipo\":\"nueva_tarea\",\"id\":42}" }
         String tipo = remoteMessage.getData().get("tipo");
-        String targetId = remoteMessage.getData().get("target_id");
-        String estudianteId = remoteMessage.getData().get("estudiante_id");
+        String datosJson = remoteMessage.getData().get("datos");
 
-        Log.d(TAG, "Tipo: " + tipo + ", Target ID: " + targetId + ", Estudiante ID: " + estudianteId);
+        // Parsear JSON de datos para obtener id
+        String targetId = null;
+        String estudianteId = null;
+
+        if (datosJson != null) {
+            try {
+                org.json.JSONObject datosObj = new org.json.JSONObject(datosJson);
+                if (datosObj.has("id")) {
+                    targetId = datosObj.getString("id");
+                }
+                if (datosObj.has("asignacionId")) {
+                    targetId = datosObj.getString("asignacionId");
+                }
+                if (datosObj.has("estudianteId")) {
+                    estudianteId = datosObj.getString("estudianteId");
+                }
+                Log.d(TAG, "📊 Datos parseados - tipo: " + datosObj.optString("tipo") + ", id: " + targetId);
+            } catch (org.json.JSONException e) {
+                Log.e(TAG, "❌ Error parseando datos JSON: " + e.getMessage());
+            }
+        }
+
+        // Fallback: intentar obtener de campos directos (compatibilidad)
+        if (targetId == null) {
+            targetId = remoteMessage.getData().get("target_id");
+        }
+        if (estudianteId == null) {
+            estudianteId = remoteMessage.getData().get("estudiante_id");
+        }
+
+        Log.d(TAG, "📋 Procesando - Tipo: " + tipo + ", Target ID: " + targetId + ", Estudiante ID: " + estudianteId);
 
         // Mostrar notificación según tipo
         showNotificationByType(title, body, tipo, targetId, estudianteId);
@@ -242,14 +272,23 @@ public class FCMNotificationService extends FirebaseMessagingService {
         // Verificar permisos para Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (notificationManager.areNotificationsEnabled()) {
-                notificationManager.notify(notificationId, builder.build());
-                Log.d(TAG, "Notificación mostrada: " + title);
+                try {
+                    notificationManager.notify(notificationId, builder.build());
+                    Log.d(TAG, "✅ Notificación mostrada: " + title);
+                } catch (SecurityException e) {
+                    Log.e(TAG, "❌ Error de permisos al mostrar notificación: " + e.getMessage());
+                }
             } else {
-                Log.w(TAG, "Notificaciones no habilitadas");
+                Log.w(TAG, "⚠️ Notificaciones no habilitadas por el usuario");
             }
         } else {
-            notificationManager.notify(notificationId, builder.build());
-            Log.d(TAG, "Notificación mostrada: " + title);
+            // Android < 13: notificaciones habilitadas por defecto
+            try {
+                notificationManager.notify(notificationId, builder.build());
+                Log.d(TAG, "✅ Notificación mostrada: " + title);
+            } catch (SecurityException e) {
+                Log.e(TAG, "❌ Error al mostrar notificación: " + e.getMessage());
+            }
         }
     }
 
@@ -301,18 +340,29 @@ public class FCMNotificationService extends FirebaseMessagingService {
 
     /**
      * Registra token en backend si hay sesión activa
+     * ✅ ACTUALIZADO: Campo plataforma agregado (16 Feb 2026)
+     * ✅ CORREGIDO: SharedPreferences ahora coincide con LoginActivity (16 Feb 2026)
      */
     private void registerTokenWithBackend(String token) {
-        SharedPreferences prefs = getSharedPreferences("auth_prefs", MODE_PRIVATE);
-        String authToken = prefs.getString("auth_token", null);
+        // ✅ CORREGIDO: Usar mismo nombre que LoginActivity ("AppPrefs" y "AUTH_TOKEN")
+        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        String authToken = prefs.getString("AUTH_TOKEN", null);
+
+        Log.d(TAG, "🔍 Verificando sesión activa...");
+        Log.d(TAG, "Auth token presente: " + (authToken != null ? "SÍ" : "NO"));
 
         if (authToken != null) {
+            // ✅ Crear DeviceInfo con campo plataforma requerido por backend
             DeviceInfo deviceInfo = new DeviceInfo(
                 token,
-                android.os.Build.MODEL,
-                "android",
-                "1.0.0"
+                android.os.Build.MODEL,       // dispositivo: "moto e40"
+                "Android",                    // ✅ plataforma: "Android" (capitalizado)
+                "android",                    // sistemaOperativo: "android" (legacy)
+                "1.0.0"                      // versionApp
             );
+
+            Log.d(TAG, "📡 Registrando token FCM en backend...");
+            Log.d(TAG, "📦 Payload: " + deviceInfo.toString());
 
             RetrofitClient.getApiService(this).registerFCMToken("Bearer " + authToken, deviceInfo)
                 .enqueue(new Callback<Void>() {
@@ -320,18 +370,28 @@ public class FCMNotificationService extends FirebaseMessagingService {
                     public void onResponse(Call<Void> call, Response<Void> response) {
                         if (response.isSuccessful()) {
                             Log.d(TAG, "✅ Token FCM registrado exitosamente en backend");
+                            Log.d(TAG, "🎉 Las notificaciones push ahora funcionarán correctamente");
                         } else {
-                            Log.w(TAG, "⚠️ Error registrando token FCM: " + response.code());
+                            Log.e(TAG, "❌ Error registrando token FCM - Código: " + response.code());
+                            try {
+                                if (response.errorBody() != null) {
+                                    Log.e(TAG, "📄 Error body: " + response.errorBody().string());
+                                }
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error leyendo error body: " + e.getMessage());
+                            }
                         }
                     }
 
                     @Override
                     public void onFailure(Call<Void> call, Throwable t) {
-                        Log.d(TAG, "⚠️ No se pudo registrar token FCM: " + t.getMessage());
+                        Log.e(TAG, "❌ Fallo en registro FCM: " + t.getMessage());
+                        Log.e(TAG, "🔄 El token se intentará registrar en el próximo login");
                     }
                 });
         } else {
-            Log.d(TAG, "No hay sesión activa, token se registrará en el próximo login");
+            Log.w(TAG, "⚠️ No hay sesión activa (AUTH_TOKEN null)");
+            Log.w(TAG, "💡 Token se registrará automáticamente después del próximo login");
         }
     }
 }
