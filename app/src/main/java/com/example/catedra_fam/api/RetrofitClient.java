@@ -16,7 +16,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
  */
 public class RetrofitClient {
 
-    private static final String BASE_URL = "https://escuelaparapadres-backend-1.onrender.com/api/";
+    private static final String BASE_URL = "https://escuelaparapadres-backend-1.onrender.com/api/"; // ✅ PRODUCCIÓN ACTIVADA - ngrok no tiene endpoints
+    // private static final String BASE_URL = "https://churnable-nimbly-norbert.ngrok-free.dev/api/"; // ❌ NGROK DESACTIVADO - endpoints no implementados
     private static Retrofit retrofit = null;
 
     public static Retrofit getClient(Context context) {
@@ -49,4 +50,3 @@ public class RetrofitClient {
         return getClient(context).create(ApiService.class);
     }
 }
-

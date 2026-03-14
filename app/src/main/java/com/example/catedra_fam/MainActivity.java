@@ -59,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private MaterialCardView btnTareas, btnNotificaciones, btnHistorial, btnAyuda;
     private TextView tvAlerta, tvBadgeTareas, tvBadgeNotificaciones;
     private TextView tvEstadoConexion;
+    private TextView badgeNotificaciones; // 🔥 Nuevo badge circular
     private ImageView ivEstadoConexion;
 
     private HijosAdapter hijosAdapter;
@@ -126,6 +127,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         tvBadgeTareas = findViewById(R.id.tv_badge_tareas);
         tvBadgeNotificaciones = findViewById(R.id.tv_badge_notificaciones);
+        badgeNotificaciones = findViewById(R.id.badge_notificaciones); // 🔥 Nuevo badge circular
         tvEstadoConexion = findViewById(R.id.tv_estado_conexion);
         ivEstadoConexion = findViewById(R.id.iv_estado_conexion);
     }
@@ -310,6 +312,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             listaHijos.add(hijo);
                         }
                         
+                        // ✅ GUARDAR ID del primer estudiante en SharedPreferences
+                        if (!listaHijos.isEmpty()) {
+                            int primerEstudianteId = listaHijos.get(0).getId();
+                            SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                            prefs.edit().putInt("estudianteId", primerEstudianteId).apply();
+                            Log.d("MainActivity", "✅ Guardado estudianteId: " + primerEstudianteId);
+                        }
+
                         hijosAdapter.notifyDataSetChanged();
                         actualizarBadgesYAlertas();
                     } else {
@@ -890,7 +900,7 @@ Toast.makeText(this, "Token FCM copiado en LogCat", Toast.LENGTH_LONG).show();
 
         if (authToken == null) return;
 
-        apiService.getNotificaciones(1, 50, null, false).enqueue(new Callback<NotificacionesResponse>() {
+        apiService.getNotificaciones(1, 50, null, false, null, null, null).enqueue(new Callback<NotificacionesResponse>() {
             @Override
             public void onResponse(Call<NotificacionesResponse> call, Response<NotificacionesResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -937,20 +947,49 @@ Toast.makeText(this, "Token FCM copiado en LogCat", Toast.LENGTH_LONG).show();
 
     private void actualizarBadgeNotificaciones() {
         if (notificacionesNoLeidasCount > 0) {
-            tvBadgeNotificaciones.setVisibility(View.VISIBLE);
-            if (notificacionesNoLeidasCount > 99) {
-                tvBadgeNotificaciones.setText("99+");
-            } else {
-                tvBadgeNotificaciones.setText(String.valueOf(notificacionesNoLeidasCount));
+            // 🔥 Mostrar badge circular con contador y animación
+            if (badgeNotificaciones.getVisibility() != View.VISIBLE) {
+                badgeNotificaciones.setAlpha(0f);
+                badgeNotificaciones.setVisibility(View.VISIBLE);
+                badgeNotificaciones.animate()
+                    .alpha(1f)
+                    .scaleX(1.2f)
+                    .scaleY(1.2f)
+                    .setDuration(200)
+                    .withEndAction(() -> {
+                        badgeNotificaciones.animate()
+                            .scaleX(1f)
+                            .scaleY(1f)
+                            .setDuration(100);
+                    });
             }
-            tvBadgeNotificaciones.setTextColor(getColor(android.R.color.white));
-            tvBadgeNotificaciones.setBackgroundResource(android.R.drawable.ic_dialog_email);
+
+            if (notificacionesNoLeidasCount > 99) {
+                badgeNotificaciones.setText("99+");
+            } else {
+                badgeNotificaciones.setText(String.valueOf(notificacionesNoLeidasCount));
+            }
+
+            // Mantener el texto badge original oculto
+            tvBadgeNotificaciones.setVisibility(View.GONE);
         } else {
+            // 🔥 Ocultar badge circular con animación suave
+            if (badgeNotificaciones.getVisibility() == View.VISIBLE) {
+                badgeNotificaciones.animate()
+                    .alpha(0f)
+                    .scaleX(0.8f)
+                    .scaleY(0.8f)
+                    .setDuration(150)
+                    .withEndAction(() -> {
+                        badgeNotificaciones.setVisibility(View.GONE);
+                    });
+            }
+
             if (notificacionesPermitidas) {
                 tvBadgeNotificaciones.setVisibility(View.GONE);
             } else {
                 tvBadgeNotificaciones.setVisibility(View.VISIBLE);
-                tvBadgeNotificaciones.setText("⚠️");
+                tvBadgeNotificaciones.setText("⚠️ Deshabilitadas");
                 tvBadgeNotificaciones.setTextColor(getColor(android.R.color.holo_orange_dark));
             }
         }

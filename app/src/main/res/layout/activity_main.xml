@@ -226,6 +226,24 @@
                                     app:tint="@color/white"
                                     android:contentDescription="Notificaciones" />
 
+                                <!-- Burbuja/Badge de notificación -->
+                                <TextView
+                                    android:id="@+id/badge_notificaciones"
+                                    android:layout_width="20dp"
+                                    android:layout_height="20dp"
+                                    android:layout_gravity="top|end"
+                                    android:layout_marginTop="2dp"
+                                    android:layout_marginEnd="2dp"
+                                    android:background="@drawable/badge_background_red"
+                                    android:gravity="center"
+                                    android:text="3"
+                                    android:textColor="@color/white"
+                                    android:textSize="10sp"
+                                    android:textStyle="bold"
+                                    android:visibility="gone"
+                                    tools:visibility="visible"
+                                    android:elevation="4dp" />
+
                             </FrameLayout>
 
                             <TextView
