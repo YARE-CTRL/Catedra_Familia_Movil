@@ -151,6 +151,17 @@ public class Entrega {
         return calificacion != null && calificacion.getNota() > 0;
     }
 
+    // Compatibilidad para TareaDetalleActivity
+    public String getDescripcion() {
+        return evidenciaTexto;
+    }
+    public List<String> getArchivos() {
+        return archivosUrl;
+    }
+    public String getFechaEntregaPublic() {
+        return fechaEntrega;
+    }
+
     // Clases internas
     public static class AsignacionResumen {
         @SerializedName("id")

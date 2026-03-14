@@ -31,7 +31,7 @@ public class AuthInterceptor implements Interceptor {
 
         // 🚨 EXCLUIR LOGIN - No agregar token al endpoint de login
         String url = originalRequest.url().toString();
-        if (url.contains("/auth/login/movil")) {
+        if (url.contains("/acudientes/login") || url.contains("/auth/login")) {
             // Para login, proceder sin Authorization header
             return chain.proceed(originalRequest);
         }

@@ -11,6 +11,8 @@ public class Hijo {
     private String proximaTarea;
     private String fechaProximaTarea;
     private String estado; // al_dia, con_pendientes, con_pendientes_urgentes, con_vencidas
+    private int tareasVencidas; // Nuevo campo para tareas vencidas
+    private int porAtender = -1; // Valor por defecto
 
     public Hijo() {
     }
@@ -104,10 +106,33 @@ public class Hijo {
         this.estado = estado;
     }
 
+    public int getTareasVencidas() {
+        return tareasVencidas;
+    }
+
+    public void setTareasVencidas(int tareasVencidas) {
+        this.tareasVencidas = tareasVencidas;
+    }
+
+    public int getPorAtender() {
+        return porAtender;
+    }
+
+    public void setPorAtender(int porAtender) {
+        this.porAtender = porAtender;
+    }
+
     public String getIniciales() {
         String inicial1 = nombres != null && !nombres.isEmpty() ? nombres.substring(0, 1).toUpperCase() : "";
         String inicial2 = apellidos != null && !apellidos.isEmpty() ? apellidos.substring(0, 1).toUpperCase() : "";
         return inicial1 + inicial2;
     }
-}
 
+    /**
+     * Obtiene el total de tareas que requieren atención (pendientes + vencidas)
+     * Ahora usa el valor porAtender si está disponible
+     */
+    public int getTareasPorAtender() {
+        return porAtender >= 0 ? porAtender : tareasPendientes + tareasVencidas;
+    }
+}

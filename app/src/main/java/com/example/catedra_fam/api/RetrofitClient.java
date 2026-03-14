@@ -11,11 +11,13 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * Cliente Retrofit configurado para consumir la API móvil
- * Base URL: https://escuelaparapadres-backend-1.onrender.com/api/movil/
+ * Base URL: https://escuelaparapadres-backend-1.onrender.com/api/
+ * CORREGIDO: Dominio correcto y sin duplicar /movil/
  */
 public class RetrofitClient {
 
-    private static final String BASE_URL = "https://escuelaparapadres-backend-1.onrender.com/api/movil/";
+    private static final String BASE_URL = "https://escuelaparapadres-backend-1.onrender.com/api/"; // ✅ PRODUCCIÓN ACTIVADA - ngrok no tiene endpoints
+    // private static final String BASE_URL = "https://churnable-nimbly-norbert.ngrok-free.dev/api/"; // ❌ NGROK DESACTIVADO - endpoints no implementados
     private static Retrofit retrofit = null;
 
     public static Retrofit getClient(Context context) {
@@ -24,13 +26,14 @@ public class RetrofitClient {
             HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
             loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
-            // Cliente OkHttp con interceptores
+            // ✅ Cliente OkHttp con timeouts aumentados a 60s (Backend recomendación 16-Feb-2026)
+            // Soluciona NotificationSyncWorker timeout >31s
             OkHttpClient client = new OkHttpClient.Builder()
                 .addInterceptor(new AuthInterceptor(context))
                 .addInterceptor(loggingInterceptor)
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
+                .connectTimeout(60, TimeUnit.SECONDS)  // ✅ Aumentado a 60s por timeouts backend
+                .readTimeout(60, TimeUnit.SECONDS)      // ✅ Aumentado a 60s por timeouts backend
+                .writeTimeout(60, TimeUnit.SECONDS)     // ✅ Aumentado a 60s por timeouts backend
                 .build();
 
             // Crear instancia de Retrofit
@@ -47,4 +50,3 @@ public class RetrofitClient {
         return getClient(context).create(ApiService.class);
     }
 }
-

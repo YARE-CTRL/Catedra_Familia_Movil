@@ -23,6 +23,7 @@ import com.example.catedra_fam.models.ApiResponse;
 import com.example.catedra_fam.models.LoginRequest;
 import com.example.catedra_fam.models.LoginResponse;
 import com.example.catedra_fam.models.DeviceInfo;
+import com.example.catedra_fam.utils.DialogHelper;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import retrofit2.Call;
@@ -135,7 +136,7 @@ public class LoginActivity extends AppCompatActivity {
                         
                         loginExitoso(loginResponse.getUser().getNombreCompleto());
                     } else {
-                        Toast.makeText(LoginActivity.this, "Credenciales incorrectas", Toast.LENGTH_SHORT).show();
+                        DialogHelper.showErrorDialog(LoginActivity.this, "Credenciales incorrectas");
                     }
                 } else {
                     // Manejar error HTTP
@@ -148,7 +149,7 @@ public class LoginActivity extends AppCompatActivity {
                     } catch (Exception e) {
                         errorMsg = "Error: " + response.code();
                     }
-                    Toast.makeText(LoginActivity.this, errorMsg, Toast.LENGTH_LONG).show();
+                    DialogHelper.showErrorDialog(LoginActivity.this, errorMsg);
                 }
             }
             
@@ -159,7 +160,7 @@ public class LoginActivity extends AppCompatActivity {
                 if (t.getMessage() != null) {
                     errorMsg = "Error de conexión: " + t.getMessage();
                 }
-                Toast.makeText(LoginActivity.this, errorMsg, Toast.LENGTH_LONG).show();
+                DialogHelper.showErrorDialog(LoginActivity.this, errorMsg);
             }
         });
     }
@@ -237,12 +238,12 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void loginExitoso(String nombreAcudiente) {
-        Toast.makeText(this, "¡Bienvenido " + nombreAcudiente + "!", Toast.LENGTH_SHORT).show();
-        
         // Registrar token FCM después del login exitoso
         registrarFCMTokenDespuesDeLogin();
         
+        // Navegar directamente sin mostrar dialog para evitar WindowLeak
         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        intent.putExtra("MENSAJE_BIENVENIDA", "¡Bienvenido " + nombreAcudiente + "!");
         startActivity(intent);
         finish();
     }
@@ -259,13 +260,13 @@ public class LoginActivity extends AppCompatActivity {
             Log.d("TOKEN_FCM_COPIAR", fcmToken);
             Log.d("TOKEN_FCM_COPIAR", "====================================");
             
-            // Crear información del dispositivo
+            // ✅ Crear información del dispositivo con campo plataforma actualizado
             DeviceInfo deviceInfo = new DeviceInfo(
                 fcmToken,
-                "android",
-                "1.0", // Versión hardcoded temporalmente
-                android.os.Build.MODEL,
-                android.os.Build.VERSION.RELEASE
+                android.os.Build.MODEL,           // dispositivo: "moto e40"
+                "Android",                        // ✅ plataforma: "Android" (capitalizado)
+                "android",                        // sistemaOperativo: "android" (legacy)
+                "1.0.0"                          // versionApp: "1.0.0"
             );
             
             // Registrar token en backend
@@ -274,9 +275,9 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(retrofit2.Call<Void> call, retrofit2.Response<Void> response) {
                         if (response.isSuccessful()) {
-                            android.util.Log.d("LoginActivity", "FCM Token registrado exitosamente");
+                            android.util.Log.d("LoginActivity", "✅ FCM Token registrado exitosamente en backend");
                         } else {
-                            android.util.Log.e("LoginActivity", "Error registrando FCM token: " + response.code());
+                            android.util.Log.e("LoginActivity", "⚠️ Error registrando FCM token: " + response.code());
                         }
                     }
                     
@@ -308,23 +309,37 @@ public class LoginActivity extends AppCompatActivity {
      * Este método es CRÍTICO para que las notificaciones funcionen en Android 13+
      */
     private void solicitarPermisoNotificaciones() {
+        Log.d("LoginActivity", "=== VERIFICACIÓN PERMISO NOTIFICACIONES ===");
+        Log.d("LoginActivity", "📱 Android Version: " + Build.VERSION.SDK_INT);
+        Log.d("LoginActivity", "📱 Android Release: " + Build.VERSION.RELEASE);
+        Log.d("LoginActivity", "📱 API Level requerido: " + Build.VERSION_CODES.TIRAMISU + " (Android 13)");
+
         // Solo para Android 13+ (API 33+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Log.d("LoginActivity", "✅ Android 13+ detectado, verificando permiso...");
+
             // Verificar si el permiso ya está concedido
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) 
-                != PackageManager.PERMISSION_GRANTED) {
-                
-                Log.d("LoginActivity", "Solicitando permiso de notificaciones para Android 13+");
-                
+            int permissionStatus = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS);
+            Log.d("LoginActivity", "📋 Estado permiso: " + (permissionStatus == PackageManager.PERMISSION_GRANTED ? "CONCEDIDO" : "DENEGADO"));
+
+            if (permissionStatus != PackageManager.PERMISSION_GRANTED) {
+
+                Log.d("LoginActivity", "🔔 Solicitando permiso de notificaciones...");
+
                 // Mostrar explicación (opcional pero recomendado)
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this, 
-                    Manifest.permission.POST_NOTIFICATIONS)) {
-                    
+                boolean shouldShowRationale = ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.POST_NOTIFICATIONS);
+                Log.d("LoginActivity", "📝 shouldShowRationale: " + shouldShowRationale);
+
+                if (shouldShowRationale) {
+
+                    Log.d("LoginActivity", "💬 Mostrando diálogo explicativo...");
                     // Mostrar diálogo explicativo
                     new androidx.appcompat.app.AlertDialog.Builder(this)
                         .setTitle("Permiso de Notificaciones Requerido")
                         .setMessage("Para recibir alertas importantes sobre tareas y eventos de tus hijos, necesitamos tu permiso para enviar notificaciones.")
                         .setPositiveButton("Conceder", (dialog, which) -> {
+                            Log.d("LoginActivity", "✅ Usuario aceptó, solicitando permiso...");
                             // Solicitar permiso
                             ActivityCompat.requestPermissions(
                                 this,
@@ -333,12 +348,13 @@ public class LoginActivity extends AppCompatActivity {
                             );
                         })
                         .setNegativeButton("Cancelar", (dialog, which) -> {
-                            Log.w("LoginActivity", "Usuario denegó permiso de notificaciones");
-                            Toast.makeText(this, "No podrás recibir notificaciones importantes", Toast.LENGTH_LONG).show();
+                            Log.w("LoginActivity", "❌ Usuario canceló permiso de notificaciones");
+                            DialogHelper.showInfoDialog(this, "Permiso de Notificaciones", "No podrás recibir notificaciones importantes");
                         })
                         .show();
                 } else {
                     // Solicitar permiso directamente (sin explicación)
+                    Log.d("LoginActivity", "🔔 Solicitando permiso directamente (sin diálogo)...");
                     ActivityCompat.requestPermissions(
                         this,
                         new String[]{Manifest.permission.POST_NOTIFICATIONS},
@@ -346,12 +362,14 @@ public class LoginActivity extends AppCompatActivity {
                     );
                 }
             } else {
-                Log.d("LoginActivity", "Permiso de notificaciones ya concedido");
+                Log.d("LoginActivity", "✅ Permiso de notificaciones ya concedido");
             }
         } else {
             // Para Android < 13, el permiso no se solicita en runtime
-            Log.d("LoginActivity", "Android < 13, no se requiere permiso runtime para notificaciones");
+            Log.d("LoginActivity", "⚠️ Android " + Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ") - El permiso de notificaciones NO requiere solicitud en runtime");
+            Log.d("LoginActivity", "✅ Las notificaciones se habilitan automáticamente desde el AndroidManifest.xml");
         }
+        Log.d("LoginActivity", "=== FIN VERIFICACIÓN ===");
     }
 
     /**
@@ -364,16 +382,11 @@ public class LoginActivity extends AppCompatActivity {
         if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Log.d("LoginActivity", "✅ Permiso de notificaciones concedido");
-                Toast.makeText(this, "¡Gracias! Ahora recibirás notificaciones importantes", Toast.LENGTH_SHORT).show();
-                
+                DialogHelper.showSuccessDialog(this, "¡Gracias! Ahora recibirás notificaciones importantes");
+
             } else {
                 Log.w("LoginActivity", "❌ Permiso de notificaciones denegado");
-                Toast.makeText(this, "No podrás recibir notificaciones importantes. Puedes activarlas en Configuración.", Toast.LENGTH_LONG).show();
-                
-                // Opcional: Redirigir a configuración de la app
-                // Intent intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
-                // intent.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
-                // startActivity(intent);
+                DialogHelper.showInfoDialog(this, "Permiso de Notificaciones", "No podrás recibir notificaciones importantes. Puedes activarlas en Configuración.");
             }
         }
     }

@@ -1,38 +1,65 @@
 package com.example.catedra_fam.models;
 
 import com.google.gson.annotations.SerializedName;
+import java.util.Map;
 
 /**
  * Modelo de Notificación
  * RF-MO-015, RF-MO-016
+ * ✅ ACTUALIZADO: Campos alineados con backend (16 Feb 2026)
+ * Backend usa: titulo, cuerpo, datos, leida
  */
 public class Notificacion {
     @SerializedName("id")
     private int id;
 
     @SerializedName("tipo")
-    private String tipo; // nueva_tarea, calificacion, recordatorio
+    private String tipo; // tarea, evento, recordatorio, general, urgente
 
-    @SerializedName("asunto")
-    private String asunto;
+    /**
+     * ✅ ACTUALIZADO: Backend usa "titulo" (antes era "asunto")
+     */
+    @SerializedName("titulo")
+    private String titulo;
 
-    @SerializedName("mensaje")
+    /**
+     * ✅ ACTUALIZADO: Backend usa "cuerpo" pero mapeamos a "mensaje" local
+     * Esto permite usar getMensaje() en el código existente
+     */
+    @SerializedName("cuerpo")
     private String mensaje;
 
-    @SerializedName("estado")
-    private String estado; // enviada, leida
+    /**
+     * ✅ NUEVO: Campo "datos" JSON del backend
+     * Contiene metadata como: {"tipo": "nueva_tarea", "id": 42}
+     */
+    @SerializedName("datos")
+    private Map<String, Object> datos;
 
-    @SerializedName("enviadoEn")
-    private String enviadoEn;
+    /**
+     * ✅ ACTUALIZADO: Backend usa "leida" (boolean) en lugar de "estado"
+     */
+    @SerializedName("leida")
+    private boolean leida;
 
-    @SerializedName("leidoEn")
-    private String leidoEn;
+    /**
+     * ✅ ACTUALIZADO: Backend usa "leidaEn" (snake_case se convierte a camelCase)
+     */
+    @SerializedName("leidaEn")
+    private String leidaEn;
 
+    /**
+     * ✅ NUEVO: Backend incluye "creadaEn" (timestamp de creación)
+     */
+    @SerializedName("creadaEn")
+    private String creadaEn;
+
+    // CAMPOS LEGACY - Mantener para compatibilidad con código existente
     @SerializedName("asignacionId")
-    private Integer asignacionId; // Puede ser null
+    private Integer asignacionId; // Puede extraerse de "datos" si existe
 
     @SerializedName("metadatos")
-    private Metadatos metadatos;
+    private Metadatos metadatos; // Puede ser null
 
     // Getters y Setters
     public int getId() {
@@ -51,12 +78,23 @@ public class Notificacion {
         this.tipo = tipo;
     }
 
+    public String getTitulo() {
+        return titulo;
+    }
+
+    public void setTitulo(String titulo) {
+        this.titulo = titulo;
+    }
+
+    /**
+     * Alias para compatibilidad con código existente que usa getAsunto()
+     */
     public String getAsunto() {
-        return asunto;
+        return titulo;
     }
 
     public void setAsunto(String asunto) {
-        this.asunto = asunto;
+        this.titulo = asunto;
     }
 
     public String getMensaje() {
@@ -67,31 +105,80 @@ public class Notificacion {
         this.mensaje = mensaje;
     }
 
+    public Map<String, Object> getDatos() {
+        return datos;
+    }
+
+    public void setDatos(Map<String, Object> datos) {
+        this.datos = datos;
+    }
+
+    public boolean isLeida() {
+        return leida;
+    }
+
+    public void setLeida(boolean leida) {
+        this.leida = leida;
+    }
+
+    /**
+     * Alias para compatibilidad con código que usa getEstado()
+     * @return "leida" o "enviada" basado en el campo leida
+     */
     public String getEstado() {
-        return estado;
+        return leida ? "leida" : "enviada";
     }
 
     public void setEstado(String estado) {
-        this.estado = estado;
+        this.leida = "leida".equals(estado);
     }
 
-    public String getEnviadoEn() {
-        return enviadoEn;
+    public String getLeidaEn() {
+        return leidaEn;
     }
 
-    public void setEnviadoEn(String enviadoEn) {
-        this.enviadoEn = enviadoEn;
+    public void setLeidaEn(String leidaEn) {
+        this.leidaEn = leidaEn;
     }
 
+    /**
+     * Alias para compatibilidad
+     */
     public String getLeidoEn() {
-        return leidoEn;
+        return leidaEn;
     }
 
     public void setLeidoEn(String leidoEn) {
-        this.leidoEn = leidoEn;
+        this.leidaEn = leidoEn;
+    }
+
+    public String getCreadaEn() {
+        return creadaEn;
+    }
+
+    public void setCreadaEn(String creadaEn) {
+        this.creadaEn = creadaEn;
+    }
+
+    /**
+     * Alias para compatibilidad - obtiene timestamp de envío
+     */
+    public String getEnviadoEn() {
+        return creadaEn;
+    }
+
+    public void setEnviadoEn(String enviadoEn) {
+        this.creadaEn = enviadoEn;
     }
 
     public Integer getAsignacionId() {
+        // Intentar extraer de datos si no está definido directamente
+        if (asignacionId == null && datos != null) {
+            Object id = datos.get("id");
+            if (id instanceof Number) {
+                asignacionId = ((Number) id).intValue();
+            }
+        }
         return asignacionId;
     }
 
@@ -107,25 +194,12 @@ public class Notificacion {
         this.metadatos = metadatos;
     }
 
-    public boolean isLeida() {
-        return leidoEn != null;
-    }
-
-    public void setLeida(boolean leida) {
-        if (leida && leidoEn == null) {
-            // Marcar como leída ahora
-            this.leidoEn = java.time.LocalDateTime.now().toString();
-            this.estado = "leida";
-        } else if (!leida) {
-            this.leidoEn = null;
-            this.estado = "enviada";
-        }
-    }
-
+    // Métodos helper para UI
     public String getAccion() {
         // Generar acción según tipo
         switch (tipo) {
             case "nueva_tarea":
+            case "tarea":  // ✅ Backend usa "tarea"
                 return "VER_TAREA";
             case "calificacion":
                 return "VER_NOTA";
@@ -142,10 +216,10 @@ public class Notificacion {
         return asignacionId != null ? String.valueOf(asignacionId) : null;
     }
 
-    // Métodos helper para UI
     public String getIcono() {
         switch (tipo) {
             case "nueva_tarea":
+            case "tarea":  // ✅ Backend usa "tarea"
                 return "📋";
             case "calificacion":
                 return "⭐";
@@ -158,38 +232,15 @@ public class Notificacion {
         }
     }
 
-    public String getTitulo() {
-        if (asunto != null && !asunto.isEmpty()) {
-            return asunto;
-        }
-
-        // Generar título según tipo si no hay asunto
-        switch (tipo) {
-            case "nueva_tarea":
-                return "Nueva tarea asignada";
-            case "calificacion":
-                return "Tarea calificada";
-            case "recordatorio":
-                return "Recordatorio de tarea";
-            case "vencimiento":
-                return "Tarea próxima a vencer";
-            default:
-                return "Notificación";
-        }
-    }
-
     public String getTiempo() {
-        if (enviadoEn == null) return "";
-
-        // Aquí deberías implementar la lógica para calcular "hace X tiempo"
-        // Por ahora retorno el enviadoEn directo
-        // En producción, usa una librería como TimeAgo o implementa tu lógica
-        return formatearTiempoRelativo(enviadoEn);
+        if (creadaEn == null) return "";
+        return formatearTiempoRelativo(creadaEn);
     }
 
     public String getTextoAccion() {
         switch (tipo) {
             case "nueva_tarea":
+            case "tarea":
                 return "Ver tarea";
             case "calificacion":
                 return "Ver nota";
@@ -203,13 +254,47 @@ public class Notificacion {
     }
 
     private String formatearTiempoRelativo(String fechaISO) {
-        // Implementación simple - en producción usa una librería
+        // ✅ IMPLEMENTACIÓN REAL - Cálculo de tiempo relativo
         try {
-            // Por ahora retorna la fecha tal cual
-            // TODO: Implementar cálculo de "hace X minutos/horas/días"
-            return "Reciente";
+            if (fechaISO == null || fechaISO.isEmpty()) {
+                return "Reciente";
+            }
+
+            // Parser para formato ISO del backend: "2026-02-14T15:30:00.000-05:00"
+            java.text.SimpleDateFormat parser = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", java.util.Locale.getDefault());
+            java.util.Date fechaNotificacion = parser.parse(fechaISO);
+
+            if (fechaNotificacion == null) {
+                return "Reciente";
+            }
+
+            long tiempoActual = System.currentTimeMillis();
+            long tiempoNotificacion = fechaNotificacion.getTime();
+            long diferenciaMilis = tiempoActual - tiempoNotificacion;
+
+            // Convertir a diferentes unidades de tiempo
+            long segundos = diferenciaMilis / 1000;
+            long minutos = segundos / 60;
+            long horas = minutos / 60;
+            long dias = horas / 24;
+
+            // Formatear según el tiempo transcurrido
+            if (segundos < 60) {
+                return segundos <= 5 ? "Ahora mismo" : "Hace " + segundos + " seg";
+            } else if (minutos < 60) {
+                return "Hace " + minutos + " min";
+            } else if (horas < 24) {
+                return "Hace " + horas + " h";
+            } else if (dias < 7) {
+                return "Hace " + dias + (dias == 1 ? " día" : " días");
+            } else {
+                // Para fechas muy antiguas, mostrar fecha formateada
+                java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("dd MMM", java.util.Locale.getDefault());
+                return formatter.format(fechaNotificacion);
+            }
         } catch (Exception e) {
-            return "";
+            android.util.Log.e("Notificacion", "Error formateando tiempo relativo: " + e.getMessage());
+            return "Reciente";
         }
     }
 

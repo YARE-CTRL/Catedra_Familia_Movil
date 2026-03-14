@@ -3,8 +3,22 @@ package com.example.catedra_fam.models;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * Respuesta genérica de la API
- * Usado por todos los endpoints
+ * ✅ ACTUALIZADO (13/Feb/2026): Respuesta genérica de la API
+ * Estructura del backend:
+ * {
+ *   "success": true,
+ *   "data": [...],
+ *   "meta": {
+ *     "total": 15,
+ *     "pendientes": 5,
+ *     "vencidas": 3,
+ *     "entregadas": 4,
+ *     "calificadas": 3,
+ *     "porAtender": 8
+ *   },
+ *   "message": "...",
+ *   "error": "..."
+ * }
  */
 public class ApiResponse<T> {
     @SerializedName("success")
@@ -12,6 +26,9 @@ public class ApiResponse<T> {
 
     @SerializedName("data")
     private T data;
+
+    @SerializedName("meta")
+    private Object meta; // ✅ NUEVO: Para contadores y metadatos
 
     @SerializedName("message")
     private String message;
@@ -34,6 +51,14 @@ public class ApiResponse<T> {
 
     public void setData(T data) {
         this.data = data;
+    }
+
+    public Object getMeta() {
+        return meta;
+    }
+
+    public void setMeta(Object meta) {
+        this.meta = meta;
     }
 
     public String getMessage() {

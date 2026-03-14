@@ -9,8 +9,8 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import com.example.catedra_fam.utils.DialogHelper;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -110,9 +110,9 @@ public class CambiarContrasenaActivity extends AppCompatActivity {
     }
 
     private void intentarActualizar() {
-        String actual = etContrasenaActual.getText().toString().trim();
-        String nueva = etNuevaContrasena.getText().toString().trim();
-        String confirmar = etConfirmarContrasena.getText().toString().trim();
+        String actual = etContrasenaActual.getText() != null ? etContrasenaActual.getText().toString().trim() : "";
+        String nueva = etNuevaContrasena.getText() != null ? etNuevaContrasena.getText().toString().trim() : "";
+        String confirmar = etConfirmarContrasena.getText() != null ? etConfirmarContrasena.getText().toString().trim() : "";
 
         // Validaciones
         if (!validarCampos(actual, nueva, confirmar)) {
@@ -123,41 +123,39 @@ public class CambiarContrasenaActivity extends AppCompatActivity {
         mostrarLoading(true);
 
         // Simular llamada a API (2 segundos)
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            actualizacionExitosa();
-        }, 2000);
+        new Handler(Looper.getMainLooper()).postDelayed(() -> actualizacionExitosa(), 2000);
     }
 
     private boolean validarCampos(String actual, String nueva, String confirmar) {
         // Validar contraseña actual
         if (actual.isEmpty()) {
-            etContrasenaActual.setError(getString(R.string.campo_vacio));
+            DialogHelper.showErrorDialog(this, getString(R.string.campo_vacio));
             etContrasenaActual.requestFocus();
             return false;
         }
 
         // Validar nueva contraseña
         if (nueva.isEmpty()) {
-            etNuevaContrasena.setError(getString(R.string.campo_vacio));
+            DialogHelper.showErrorDialog(this, getString(R.string.campo_vacio));
             etNuevaContrasena.requestFocus();
             return false;
         }
 
         if (!esContrasenaSegura(nueva)) {
-            etNuevaContrasena.setError("No cumple los requisitos de seguridad");
+            DialogHelper.showErrorDialog(this, "No cumple los requisitos de seguridad");
             etNuevaContrasena.requestFocus();
             return false;
         }
 
         // Validar confirmación
         if (confirmar.isEmpty()) {
-            etConfirmarContrasena.setError(getString(R.string.campo_vacio));
+            DialogHelper.showErrorDialog(this, getString(R.string.campo_vacio));
             etConfirmarContrasena.requestFocus();
             return false;
         }
 
         if (!nueva.equals(confirmar)) {
-            etConfirmarContrasena.setError(getString(R.string.contrasenas_no_coinciden));
+            DialogHelper.showErrorDialog(this, getString(R.string.contrasenas_no_coinciden));
             etConfirmarContrasena.requestFocus();
             return false;
         }
@@ -174,7 +172,7 @@ public class CambiarContrasenaActivity extends AppCompatActivity {
 
     private void actualizacionExitosa() {
         mostrarLoading(false);
-        Toast.makeText(this, "Contraseña actualizada exitosamente", Toast.LENGTH_SHORT).show();
+        DialogHelper.showSuccessDialog(this, "Contraseña actualizada exitosamente");
 
         // Si era obligatorio, ir al dashboard
         // Si no, volver atrás
@@ -199,4 +197,3 @@ public class CambiarContrasenaActivity extends AppCompatActivity {
         }
     }
 }
-

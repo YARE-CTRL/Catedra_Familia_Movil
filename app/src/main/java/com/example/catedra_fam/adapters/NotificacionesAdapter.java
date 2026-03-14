@@ -26,11 +26,40 @@ public class NotificacionesAdapter extends RecyclerView.Adapter<NotificacionesAd
     public interface OnNotificacionClickListener {
         void onAccionClick(Notificacion notificacion);
         void onNotificacionClick(Notificacion notificacion);
+        void onDeleteClick(Notificacion notificacion, int position);
     }
 
     public NotificacionesAdapter(List<Notificacion> listaNotificaciones, OnNotificacionClickListener listener) {
         this.listaNotificaciones = listaNotificaciones;
         this.listener = listener;
+    }
+
+    /**
+     * ✅ NUEVO MÉTODO - Remover item de la lista (para swipe-to-delete)
+     */
+    public void removeItem(int position) {
+        if (position >= 0 && position < listaNotificaciones.size()) {
+            listaNotificaciones.remove(position);
+            notifyItemRemoved(position);
+        }
+    }
+
+    /**
+     * ✅ NUEVO MÉTODO - Obtener item en posición específica
+     */
+    public Notificacion getItem(int position) {
+        if (position >= 0 && position < listaNotificaciones.size()) {
+            return listaNotificaciones.get(position);
+        }
+        return null;
+    }
+
+    /**
+     * ✅ NUEVO MÉTODO - Limpiar toda la lista
+     */
+    public void clear() {
+        listaNotificaciones.clear();
+        notifyDataSetChanged();
     }
 
     @NonNull

@@ -1,8 +1,5 @@
 package com.example.catedra_fam.utils;
 
-import android.content.Context;
-import android.graphics.Color;
-import androidx.core.content.ContextCompat;
 import com.example.catedra_fam.R;
 
 /**
@@ -216,7 +213,7 @@ public class TareaEstadoUtils {
         if (porcentaje >= 80) return R.color.success;
         if (porcentaje >= 60) return R.color.warning;
         if (porcentaje >= 40) return R.color.info;
-        return R.color.error;
+        return R.color.error_text;
     }
 
     /**
@@ -226,8 +223,7 @@ public class TareaEstadoUtils {
         if (promedio <= 0) {
             return "Sin calificaciones";
         }
-
-        String promedioStr = String.format("%.1f", promedio);
+        String promedioStr = String.format(java.util.Locale.US, "%.1f", promedio);
         if (escala != null && !escala.isEmpty() && !"Sin datos".equals(escala)) {
             return promedioStr + " - " + escala;
         } else {

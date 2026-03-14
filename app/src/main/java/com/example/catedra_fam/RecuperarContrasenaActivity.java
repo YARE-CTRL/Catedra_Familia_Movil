@@ -2,8 +2,6 @@ package com.example.catedra_fam;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Patterns;
 import android.view.View;
@@ -14,6 +12,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
+// ✅ NUEVOS IMPORTS - API OTP Real
+import com.example.catedra_fam.api.RetrofitClient;
+import com.example.catedra_fam.api.ApiService;
+import com.example.catedra_fam.models.OtpSolicitarRequest;
+import com.example.catedra_fam.models.OtpSolicitarResponse;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class RecuperarContrasenaActivity extends AppCompatActivity {
 
     private ImageButton btnVolver;
@@ -21,10 +28,16 @@ public class RecuperarContrasenaActivity extends AppCompatActivity {
     private MaterialButton btnEnviarCodigo;
     private ProgressBar pbLoading;
 
+    // ✅ NUEVO - API Service para OTP real
+    private ApiService apiService;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recuperar_contrasena);
+
+        // Inicializar API Service
+        apiService = RetrofitClient.getApiService(this);
 
         // Inicializar vistas
         initViews();
@@ -69,24 +82,61 @@ public class RecuperarContrasenaActivity extends AppCompatActivity {
         // Mostrar loading
         mostrarLoading(true);
 
-        // Simular envío de código (2 segundos)
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            envioExitoso(correoTelefono);
-        }, 2000);
+        // ✅ LLAMADA REAL AL BACKEND - Solicitar código OTP
+        OtpSolicitarRequest request = new OtpSolicitarRequest(correoTelefono);
+
+        apiService.solicitarRecuperacion(request)
+            .enqueue(new Callback<OtpSolicitarResponse>() {
+                @Override
+                public void onResponse(Call<OtpSolicitarResponse> call, Response<OtpSolicitarResponse> response) {
+                    mostrarLoading(false);
+
+                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                        // Éxito - código enviado
+                        OtpSolicitarResponse otpResponse = response.body();
+                        envioExitoso(correoTelefono, otpResponse);
+                    } else {
+                        // Error del servidor
+                        String mensaje = "Error al enviar código";
+                        if (response.body() != null && response.body().getMessage() != null) {
+                            mensaje = response.body().getMessage();
+                        }
+                        Toast.makeText(RecuperarContrasenaActivity.this, mensaje, Toast.LENGTH_LONG).show();
+                        btnEnviarCodigo.setEnabled(true);
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<OtpSolicitarResponse> call, Throwable t) {
+                    mostrarLoading(false);
+                    Toast.makeText(RecuperarContrasenaActivity.this,
+                        "Error de conexión: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                    btnEnviarCodigo.setEnabled(true);
+                }
+            });
     }
 
-    private void envioExitoso(String correoTelefono) {
-        mostrarLoading(false);
-
+    private void envioExitoso(String correoTelefono, OtpSolicitarResponse otpResponse) {
         // Ocultar parte del correo/teléfono
         String correoOculto = ocultarCorreo(correoTelefono);
 
-        Toast.makeText(this, "Código enviado exitosamente", Toast.LENGTH_SHORT).show();
+        // Mensaje con información del método usado
+        String metodo = otpResponse.getMetodo();
+        String mensajeMetodo = "sms".equals(metodo) ? "teléfono" : "correo electrónico";
+        Toast.makeText(this, "Código enviado a tu " + mensajeMetodo, Toast.LENGTH_SHORT).show();
 
-        // Ir a verificar código
+        // ✅ NAVEGACIÓN CON DATOS REALES DEL BACKEND
         Intent intent = new Intent(RecuperarContrasenaActivity.this, VerificarCodigoActivity.class);
         intent.putExtra("CORREO_TELEFONO", correoTelefono);
         intent.putExtra("CORREO_OCULTO", correoOculto);
+        intent.putExtra("METODO", otpResponse.getMetodo());
+        intent.putExtra("EXPIRA_EN", otpResponse.getExpiraEn());
+
+        // ⚠️ Solo en desarrollo - pasar código debug si existe
+        if (otpResponse.getCodigoDebug() != null) {
+            intent.putExtra("CODIGO_DEBUG", otpResponse.getCodigoDebug());
+        }
+
         startActivity(intent);
     }
 

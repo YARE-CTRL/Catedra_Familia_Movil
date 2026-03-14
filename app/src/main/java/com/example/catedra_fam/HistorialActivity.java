@@ -6,7 +6,6 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -20,6 +19,7 @@ import com.example.catedra_fam.api.RetrofitClient;
 import com.example.catedra_fam.models.ApiResponse;
 import com.example.catedra_fam.models.HistorialResponse;
 import com.example.catedra_fam.models.Entrega;
+import com.example.catedra_fam.utils.DialogHelper;
 import com.google.android.material.card.MaterialCardView;
 
 import java.util.ArrayList;
@@ -117,9 +117,7 @@ public class HistorialActivity extends AppCompatActivity {
         listaEntregas = new ArrayList<>();
         historialAdapter = new HistorialAdapter(listaEntregas, entrega -> {
             // Ver evidencia
-            Toast.makeText(this,
-                "Ver evidencia de: " + entrega.getTareaTitulo(),
-                Toast.LENGTH_SHORT).show();
+            DialogHelper.showInfoDialog(this, "Evidencia", "Ver evidencia de: " + entrega.getTareaTitulo());
             // TODO: Abrir detalle de evidencia
         });
         rvEntregas.setLayoutManager(new LinearLayoutManager(this));
@@ -137,14 +135,21 @@ public class HistorialActivity extends AppCompatActivity {
     private void cargarEntregas() {
         swipeRefresh.setRefreshing(true);
 
+        android.util.Log.d("HistorialActivity", "📡 Cargando historial para estudiante ID: " + estudianteId);
+        android.util.Log.d("HistorialActivity", "🔗 URL: /movil/estudiantes/" + estudianteId + "/historial");
+
         // Llamar API para obtener el historial real
         apiService.getHistorial(estudianteId, null).enqueue(new Callback<ApiResponse<HistorialResponse>>() {
             @Override
             public void onResponse(Call<ApiResponse<HistorialResponse>> call, Response<ApiResponse<HistorialResponse>> response) {
                 swipeRefresh.setRefreshing(false);
 
+                android.util.Log.d("HistorialActivity", "📥 Response code: " + response.code());
+                android.util.Log.d("HistorialActivity", "📥 Response successful: " + response.isSuccessful());
+
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<HistorialResponse> apiResponse = response.body();
+                    android.util.Log.d("HistorialActivity", "✅ API Success: " + apiResponse.isSuccess());
 
                     if (apiResponse.isSuccess()) {
                         HistorialResponse historialData = apiResponse.getData();
@@ -152,21 +157,29 @@ public class HistorialActivity extends AppCompatActivity {
                         listaEntregas.clear();
                         if (historialData != null && historialData.getEntregas() != null) {
                             listaEntregas.addAll(historialData.getEntregas());
+                            android.util.Log.d("HistorialActivity", "📚 Entregas cargadas: " + listaEntregas.size());
+                        } else {
+                            android.util.Log.w("HistorialActivity", "⚠️ Historial data o entregas es null");
                         }
 
                         historialAdapter.notifyDataSetChanged();
                         actualizarResumen();
                         actualizarEmptyState();
                     } else {
-                        Toast.makeText(HistorialActivity.this,
-                            "Error al cargar historial: " + apiResponse.getMessage(),
-                            Toast.LENGTH_SHORT).show();
+                        android.util.Log.e("HistorialActivity", "❌ API Error: " + apiResponse.getMessage());
+                        DialogHelper.showErrorDialog(HistorialActivity.this, "Error al cargar historial: " + apiResponse.getMessage());
                         mostrarEstadoVacio();
                     }
                 } else {
-                    Toast.makeText(HistorialActivity.this,
-                        "Error del servidor: " + response.code(),
-                        Toast.LENGTH_SHORT).show();
+                    android.util.Log.e("HistorialActivity", "❌ Server Error: " + response.code());
+                    if (response.errorBody() != null) {
+                        try {
+                            android.util.Log.e("HistorialActivity", "❌ Error body: " + response.errorBody().string());
+                        } catch (Exception e) {
+                            android.util.Log.e("HistorialActivity", "❌ Error leyendo error body", e);
+                        }
+                    }
+                    DialogHelper.showErrorDialog(HistorialActivity.this, "Error del servidor: " + response.code());
                     mostrarEstadoVacio();
                 }
             }
@@ -174,9 +187,8 @@ public class HistorialActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<ApiResponse<HistorialResponse>> call, Throwable t) {
                 swipeRefresh.setRefreshing(false);
-                Toast.makeText(HistorialActivity.this,
-                    "Error de conexión: " + t.getMessage(),
-                    Toast.LENGTH_SHORT).show();
+                android.util.Log.e("HistorialActivity", "❌ Network Failure: " + t.getMessage(), t);
+                DialogHelper.showErrorDialog(HistorialActivity.this, "Error de conexión: " + t.getMessage());
                 mostrarEstadoVacio();
             }
         });
@@ -233,4 +245,3 @@ public class HistorialActivity extends AppCompatActivity {
         }
     }
 }
-

@@ -2,8 +2,6 @@ package com.example.catedra_fam;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -16,6 +14,15 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.regex.Pattern;
 
+// ✅ NUEVOS IMPORTS - API OTP Real
+import com.example.catedra_fam.api.RetrofitClient;
+import com.example.catedra_fam.api.ApiService;
+import com.example.catedra_fam.models.RestablecerPasswordRequest;
+import com.example.catedra_fam.models.ApiResponse;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class NuevaContrasenaActivity extends AppCompatActivity {
 
     private TextInputEditText etNuevaContrasena, etConfirmarContrasena;
@@ -23,7 +30,12 @@ public class NuevaContrasenaActivity extends AppCompatActivity {
     private ProgressBar pbLoading;
     private TextView tvCheck8chars, tvCheckMayuscula, tvCheckNumero, tvCheckSimbolo;
 
+    // ✅ DATOS DEL BACKEND
     private String correoTelefono;
+    private String token; // Token del paso de verificación
+
+    // ✅ API Service
+    private ApiService apiService;
 
     private static final Pattern PATTERN_MAYUSCULA = Pattern.compile(".*[A-Z].*");
     private static final Pattern PATTERN_NUMERO = Pattern.compile(".*[0-9].*");
@@ -34,7 +46,12 @@ public class NuevaContrasenaActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_nueva_contrasena);
 
+        // ✅ OBTENER DATOS INCLUYENDO TOKEN
         correoTelefono = getIntent().getStringExtra("CORREO_TELEFONO");
+        token = getIntent().getStringExtra("TOKEN");
+
+        // Inicializar API Service
+        apiService = RetrofitClient.getApiService(this);
 
         initViews();
         setupListeners();
@@ -105,9 +122,35 @@ public class NuevaContrasenaActivity extends AppCompatActivity {
 
         mostrarLoading(true);
 
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            guardarExitoso();
-        }, 2000);
+        // ✅ LLAMADA REAL AL BACKEND - Restablecer contraseña
+        RestablecerPasswordRequest request = new RestablecerPasswordRequest(token, nueva, confirmar);
+
+        apiService.restablecerPassword(request)
+            .enqueue(new Callback<ApiResponse<String>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
+                    mostrarLoading(false);
+
+                    if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                        // ✅ CONTRASEÑA CAMBIADA EXITOSAMENTE
+                        guardarExitoso();
+                    } else {
+                        // ❌ ERROR DEL SERVIDOR
+                        String mensaje = "Error al cambiar contraseña";
+                        if (response.body() != null && response.body().getMessage() != null) {
+                            mensaje = response.body().getMessage();
+                        }
+                        Toast.makeText(NuevaContrasenaActivity.this, mensaje, Toast.LENGTH_LONG).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
+                    mostrarLoading(false);
+                    Toast.makeText(NuevaContrasenaActivity.this,
+                        "Error de conexión: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
     }
 
     private boolean validarCampos(String nueva, String confirmar) {

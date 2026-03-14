@@ -43,6 +43,87 @@
             android:visibility="gone"
             tools:text="No leídas (2)" />
 
+        <!-- ✅ NUEVO - Filtros temporales -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scrollbars="none"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="8dp">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_group_filtros"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:singleSelection="true"
+                app:selectionRequired="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_todas"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📋 Todas"
+                    android:checked="true"
+                    android:checkable="true"
+                    app:chipBackgroundColor="@color/chip_background_selector"
+                    app:chipStrokeWidth="1dp"
+                    app:chipStrokeColor="@color/primary"
+                    android:textColor="@color/chip_text_color_selector"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_hoy"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📅 Hoy"
+                    android:checkable="true"
+                    app:chipBackgroundColor="@color/chip_background_selector"
+                    app:chipStrokeWidth="1dp"
+                    app:chipStrokeColor="@color/primary"
+                    android:textColor="@color/chip_text_color_selector"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_24h"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⏰ 24h"
+                    android:checkable="true"
+                    app:chipBackgroundColor="@color/chip_background_selector"
+                    app:chipStrokeWidth="1dp"
+                    app:chipStrokeColor="@color/primary"
+                    android:textColor="@color/chip_text_color_selector"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_semana"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📊 Semana"
+                    android:checkable="true"
+                    app:chipBackgroundColor="@color/chip_background_selector"
+                    app:chipStrokeWidth="1dp"
+                    app:chipStrokeColor="@color/primary"
+                    android:textColor="@color/chip_text_color_selector"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_no_leidas"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔴 No leídas"
+                    android:checkable="true"
+                    app:chipBackgroundColor="@color/chip_background_selector"
+                    app:chipStrokeWidth="1dp"
+                    app:chipStrokeColor="@color/danger"
+                    android:textColor="@color/chip_text_color_selector"
+                    android:textSize="14sp" />
+
+            </com.google.android.material.chip.ChipGroup>
+
+        </HorizontalScrollView>
+
         <!-- SwipeRefreshLayout con RecyclerView -->
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/swipe_refresh"
