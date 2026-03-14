@@ -47,7 +47,7 @@ public class NotificationSyncWorker extends Worker {
             // Obtener notificaciones del backend
             ApiService apiService = RetrofitClient.getApiService(getApplicationContext());
             
-            Call<NotificacionesResponse> call = apiService.getNotificaciones(1, 50, null, false);
+            Call<NotificacionesResponse> call = apiService.getNotificaciones(1, 50, null, false, null, null, null);
 
             // Síncrono para Worker
             Response<NotificacionesResponse> response = call.execute();

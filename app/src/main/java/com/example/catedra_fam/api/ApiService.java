@@ -144,6 +144,7 @@ public interface ApiService {
 
     /**
      * RF-MO-009: Sincronización offline - Enviar entregas pendientes
+
      * POST /movil/asignaciones/:id/entregas/sync
      */
     @Multipart
@@ -213,15 +214,42 @@ public interface ApiService {
     /**
      * RF-MO-015: Lista de notificaciones del usuario
      * GET /movil/notificaciones
-     * ✅ ACTUALIZADO: Soporte paginación y filtro "leida" (no "leidas")
+     * ✅ ACTUALIZADO: Soporte paginación, filtros y periodo temporal
+     * 🆕 FILTROS OPTIMIZADOS BACKEND:
+     *    - periodo: hoy, 24h, semana, mes (filtro nativo del servidor)
+     *    - prioridad: alta, urgente (solo notificaciones prioritarias)
+     *    - orden: reciente, antigua, prioridad
      */
     @GET("movil/notificaciones")
     Call<NotificacionesResponse> getNotificaciones(
         @Query("page") Integer page,
         @Query("limit") Integer limit,
         @Query("tipo") String tipo,
-        @Query("leida") Boolean leida  // Cambió de "leidas" a "leida"
+        @Query("leida") Boolean leida,  // Cambió de "leidas" a "leida"
+        @Query("periodo") String periodo,  // 🆕 hoy, 24h, semana, mes - FILTRO NATIVO
+        @Query("prioridad") String prioridad,  // 🆕 alta, urgente - FILTRO NATIVO
+        @Query("orden") String orden  // 🆕 reciente, antigua, prioridad - ORDEN NATIVO
     );
+
+    /**
+     * 🆕 RF-MO-021: Resumen de notificaciones con contadores pre-calculados
+     * GET /movil/notificaciones/resumen
+     *
+     * OPTIMIZACIÓN CRÍTICA - Contadores calculados en servidor:
+     *    - Total de notificaciones
+     *    - No leídas (badge principal)
+     *    - Contadores por tipo (tarea, evento, recordatorio, etc.)
+     *    - Contadores por periodo temporal
+     *    - Notificaciones prioritarias
+     *    - Sugerencias UX automáticas
+     *
+     * ⚡ VENTAJAS:
+     *    - 50-80% menos carga en frontend
+     *    - Respuesta instantánea
+     *    - Zero configuración - todo pre-calculado
+     */
+    @GET("movil/notificaciones/resumen")
+    Call<ApiResponse<Map<String, Object>>> getResumenNotificaciones();
 
     /**
      * RF-MO-016: Marcar notificación como leída

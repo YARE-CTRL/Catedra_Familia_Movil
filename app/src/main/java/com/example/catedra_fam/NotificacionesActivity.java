@@ -20,12 +20,14 @@ import com.example.catedra_fam.models.ApiResponse;
 import com.example.catedra_fam.models.Notificacion;
 // ✅ NUEVO IMPORT - Para paginación
 import com.example.catedra_fam.models.NotificacionesResponse;
-import com.example.catedra_fam.utils.DialogHelper;
 import com.google.android.material.button.MaterialButton;
 // ✅ IMPORT - Para confirmación de eliminación
 import androidx.appcompat.app.AlertDialog;
 // ✅ IMPORT - Para Snackbar con undo
 import com.google.android.material.snackbar.Snackbar;
+// ✅ IMPORT - Para chips de filtros
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +47,9 @@ public class NotificacionesActivity extends AppCompatActivity implements Notific
     private MaterialButton btnEliminarLeidas;
     // ✅ NUEVO - Botón para eliminar todas
     private MaterialButton btnEliminarTodas;
+    // ✅ NUEVO - Chips de filtros
+    private ChipGroup chipGroupFiltros;
+    private Chip chipTodas, chipHoy, chip24h, chipSemana, chipNoLeidas;
 
     // Data
     private NotificacionesAdapter notificacionesAdapter;
@@ -57,6 +62,10 @@ public class NotificacionesActivity extends AppCompatActivity implements Notific
     private int totalNotificaciones = 0;
     private int noLeidas = 0;
     private boolean cargandoDatos = false;
+
+    // ✅ NUEVO - Filtros activos
+    private String periodoActual = null; // null, "hoy", "24h", "semana"
+    private Boolean filtroLeida = null; // null (todas), true (solo leídas), false (solo no leídas)
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +91,14 @@ public class NotificacionesActivity extends AppCompatActivity implements Notific
         btnEliminarLeidas = findViewById(R.id.btn_eliminar_leidas);
         // btnEliminarTodas no existe en el layout - funcionalidad opcional deshabilitada
         btnEliminarTodas = null;
+
+        // ✅ NUEVO - Inicializar chips de filtros
+        chipGroupFiltros = findViewById(R.id.chip_group_filtros);
+        chipTodas = findViewById(R.id.chip_todas);
+        chipHoy = findViewById(R.id.chip_hoy);
+        chip24h = findViewById(R.id.chip_24h);
+        chipSemana = findViewById(R.id.chip_semana);
+        chipNoLeidas = findViewById(R.id.chip_no_leidas);
     }
 
     private void setupToolbar() {
@@ -198,6 +215,17 @@ public class NotificacionesActivity extends AppCompatActivity implements Notific
             eliminarNotificacionesLeidas();
         });
 
+        // ✅ NUEVO - Listener para chips de filtros
+        chipGroupFiltros.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (checkedIds.isEmpty()) {
+                chipTodas.setChecked(true);
+                return;
+            }
+
+            int checkedId = checkedIds.get(0);
+            aplicarFiltro(checkedId);
+        });
+
         // ✅ NUEVO - Listener para eliminar todas las notificaciones
         if (btnEliminarTodas != null) {
             btnEliminarTodas.setOnClickListener(v -> {
@@ -229,54 +257,29 @@ public class NotificacionesActivity extends AppCompatActivity implements Notific
     }
 
     /**
-     * Marca todas las notificaciones como leídas usando el endpoint del backend
+     * ✅ NUEVO MÉTODO - Aplicar filtro según el chip seleccionado
      */
-    private void marcarTodasComoLeidas() {
-        apiService.marcarTodasNotificacionesLeidas().enqueue(new Callback<ApiResponse<String>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    DialogHelper.showSuccessDialog(NotificacionesActivity.this,
-                        "Todas las notificaciones han sido marcadas como leídas");
+    private void aplicarFiltro(int chipId) {
+        if (chipId == R.id.chip_todas) {
+            periodoActual = null;
+            filtroLeida = null;
+        } else if (chipId == R.id.chip_hoy) {
+            periodoActual = "hoy";
+            filtroLeida = null;
+        } else if (chipId == R.id.chip_24h) {
+            periodoActual = "24h";
+            filtroLeida = null;
+        } else if (chipId == R.id.chip_semana) {
+            periodoActual = "semana";
+            filtroLeida = null;
+        } else if (chipId == R.id.chip_no_leidas) {
+            periodoActual = null;
+            filtroLeida = false; // false = no leídas
+        }
 
-                    // Recargar lista de notificaciones
-                    cargarNotificaciones();
-                } else {
-                    DialogHelper.showErrorDialog(NotificacionesActivity.this,
-                        "Error al marcar las notificaciones como leídas");
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
-                DialogHelper.showErrorDialog(NotificacionesActivity.this,
-                    "Error de conexión: " + t.getMessage());
-            }
-        });
-    }
-
-    /**
-     * Marca una notificación específica como leída
-     */
-    private void marcarNotificacionComoLeida(int notificacionId) {
-        apiService.marcarNotificacionLeida(notificacionId).enqueue(new Callback<ApiResponse<String>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
-                if (response.isSuccessful()) {
-                    // Actualizar la lista local
-                    cargarNotificaciones();
-                } else {
-                    DialogHelper.showErrorDialog(NotificacionesActivity.this,
-                        "Error al marcar la notificación como leída");
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
-                DialogHelper.showErrorDialog(NotificacionesActivity.this,
-                    "Error de conexión: " + t.getMessage());
-            }
-        });
+        // Resetear a primera página y recargar
+        paginaActual = 1;
+        cargarNotificaciones();
     }
 
     private void cargarNotificaciones() {
@@ -286,8 +289,16 @@ public class NotificacionesActivity extends AppCompatActivity implements Notific
         // Mostrar loading
         swipeRefresh.setRefreshing(true);
 
-        // ✅ LLAMADA ACTUALIZADA - Con paginación y nuevo response type
-        apiService.getNotificaciones(paginaActual, LIMITE_POR_PAGINA, null, null)
+        // ✅ LLAMADA ACTUALIZADA - Con filtros de periodo y leída
+        apiService.getNotificaciones(
+            paginaActual,
+            LIMITE_POR_PAGINA,
+            null,           // tipo (puede ser "tarea", "evento", etc)
+            filtroLeida,    // filtro de leída/no leída
+            periodoActual,  // periodo: "hoy", "24h", "semana"
+            null,           // prioridad
+            null            // orden
+        )
             .enqueue(new Callback<NotificacionesResponse>() {
                 @Override
                 public void onResponse(Call<NotificacionesResponse> call, Response<NotificacionesResponse> response) {
@@ -318,13 +329,17 @@ public class NotificacionesActivity extends AppCompatActivity implements Notific
                             actualizarContadorNoLeidas();
                             actualizarEmptyState();
                         } else {
-                            DialogHelper.showErrorDialog(NotificacionesActivity.this,
-                                "Error al cargar notificaciones");
+                            // Error en la respuesta - solo mostrar toast
+                            android.widget.Toast.makeText(NotificacionesActivity.this,
+                                "Error al cargar notificaciones",
+                                android.widget.Toast.LENGTH_SHORT).show();
                             mostrarEstadoVacio();
                         }
                     } else {
-                        DialogHelper.showErrorDialog(NotificacionesActivity.this,
-                            "Error del servidor: " + response.code());
+                        // Error del servidor - solo mostrar toast
+                        android.widget.Toast.makeText(NotificacionesActivity.this,
+                            "Error del servidor: " + response.code(),
+                            android.widget.Toast.LENGTH_SHORT).show();
                         mostrarEstadoVacio();
                     }
                 }
@@ -333,8 +348,10 @@ public class NotificacionesActivity extends AppCompatActivity implements Notific
                 public void onFailure(Call<NotificacionesResponse> call, Throwable t) {
                     swipeRefresh.setRefreshing(false);
                     cargandoDatos = false;
-                    DialogHelper.showErrorDialog(NotificacionesActivity.this,
-                        "Error de conexión: " + t.getMessage());
+                    // Error de conexión - solo mostrar toast
+                    android.widget.Toast.makeText(NotificacionesActivity.this,
+                        "Error de conexión",
+                        android.widget.Toast.LENGTH_SHORT).show();
                     mostrarEstadoVacio();
                 }
             });
@@ -370,17 +387,17 @@ public class NotificacionesActivity extends AppCompatActivity implements Notific
         }
 
         if (leidasCount == 0) {
-            DialogHelper.showInfoDialog(this, "Sin notificaciones leídas",
-                "No hay notificaciones leídas para eliminar.");
+            android.widget.Toast.makeText(this,
+                "No hay notificaciones leídas para eliminar",
+                android.widget.Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Por ahora, sugerir eliminar todas ya que no hay endpoint específico para eliminar solo leídas
+        // Mostrar opción para eliminar todas
         new AlertDialog.Builder(this)
-            .setTitle("Eliminar notificaciones leídas")
-            .setMessage("Hay " + leidasCount + " notificaciones leídas. " +
-                       "¿Quieres eliminar TODAS las notificaciones? " +
-                       "(No hay opción para eliminar solo las leídas)")
+            .setTitle("Eliminar notificaciones")
+            .setMessage("Hay " + leidasCount + " notificaciones leídas de " + totalNotificaciones + " total.\n\n" +
+                       "¿Deseas eliminar TODAS las notificaciones?")
             .setPositiveButton("Eliminar todas", (dialog, which) -> {
                 eliminarTodasNotificaciones();
             })
@@ -390,35 +407,51 @@ public class NotificacionesActivity extends AppCompatActivity implements Notific
 
     @Override
     public void onAccionClick(Notificacion notificacion) {
-        // Marcar como leída usando la API
-        if (!notificacion.isLeida()) {
-            marcarComoLeida(notificacion);
-        }
+        // Marcar como leída de forma asíncrona (sin esperar)
+        marcarComoLeidaSilenciosamente(notificacion);
 
-        // Navegar según acción
-        switch (notificacion.getAccion()) {
-            case "VER_TAREA":
-            case "ENTREGAR":
-                Intent intentTarea = new Intent(this, TareaDetalleActivity.class);
-                intentTarea.putExtra("TAREA_ID", notificacion.getReferenciaId());
-                startActivity(intentTarea);
-                break;
-            case "VER_NOTA":
-                DialogHelper.showInfoDialog(this, "Calificación", "Ver calificación de: " + notificacion.getMensaje());
-                // TODO: Navegar a detalle de calificación
-                break;
-            default:
-                DialogHelper.showInfoDialog(this, "Notificación", notificacion.getMensaje());
-                break;
-        }
+        // Obtener el ID del primer estudiante desde la sesión
+        int estudianteId = obtenerEstudianteIdActual();
+
+        // Redirigir inmediatamente al panel de tareas con el estudiante_id correcto
+        Intent intentTareas = new Intent(this, TareasActivity.class);
+        intentTareas.putExtra("ESTUDIANTE_ID", estudianteId);
+        intentTareas.putExtra("ESTUDIANTE_NOMBRE", "Estudiante");
+        startActivity(intentTareas);
     }
 
     @Override
     public void onNotificacionClick(Notificacion notificacion) {
-        // Marcar como leída al tocar usando la API
-        if (!notificacion.isLeida()) {
-            marcarComoLeida(notificacion);
+        // Marcar como leída de forma asíncrona (sin esperar)
+        marcarComoLeidaSilenciosamente(notificacion);
+
+        // Obtener el ID del primer estudiante desde la sesión
+        int estudianteId = obtenerEstudianteIdActual();
+
+        // Redirigir inmediatamente al panel de tareas con el estudiante_id correcto
+        Intent intentTareas = new Intent(this, TareasActivity.class);
+        intentTareas.putExtra("ESTUDIANTE_ID", estudianteId);
+        intentTareas.putExtra("ESTUDIANTE_NOMBRE", "Estudiante");
+        startActivity(intentTareas);
+    }
+
+    /**
+     * Obtiene el ID del estudiante actual desde SharedPreferences
+     * @return ID del estudiante o 1 por defecto
+     */
+    private int obtenerEstudianteIdActual() {
+        // Intentar obtener desde SharedPreferences (si se guardó en login/MainActivity)
+        android.content.SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        int estudianteId = prefs.getInt("estudianteId", 0);
+
+        // Si no hay ID guardado, obtener el primer estudiante del acudiente
+        if (estudianteId == 0) {
+            // Como último recurso, usar ID 1 (primer estudiante de prueba)
+            estudianteId = 1;
         }
+
+        android.util.Log.d("NotificacionesActivity", "📍 ID Estudiante obtenido: " + estudianteId);
+        return estudianteId;
     }
 
     @Override
@@ -427,16 +460,27 @@ public class NotificacionesActivity extends AppCompatActivity implements Notific
         eliminarConSnackbar(notificacion, position);
     }
 
-    private void marcarComoLeida(Notificacion notificacion) {
+    /**
+     * Marca una notificación como leída de forma silenciosa (sin mensajes al usuario)
+     * La llamada es asíncrona y no bloquea la navegación
+     */
+    private void marcarComoLeidaSilenciosamente(Notificacion notificacion) {
+        // Si ya está leída, no hacer nada
+        if (notificacion.isLeida()) {
+            return;
+        }
+
+        // Marcar localmente de inmediato para mejorar UX
+        notificacion.setLeida(true);
+
+        // Llamada asíncrona al backend
         apiService.marcarNotificacionLeida(notificacion.getId()).enqueue(new Callback<ApiResponse<String>>() {
             @Override
             public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<String> apiResponse = response.body();
                     if (apiResponse.isSuccess()) {
-                        // Actualizar localmente
-                        notificacion.setLeida(true);
-                        notificacionesAdapter.notifyDataSetChanged();
+                        // Actualizar contador sin mostrar mensaje
                         actualizarContadorNoLeidas();
                     }
                 }
@@ -444,10 +488,8 @@ public class NotificacionesActivity extends AppCompatActivity implements Notific
 
             @Override
             public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
-                // Si falla la API, actualizar solo localmente
-                notificacion.setLeida(true);
-                notificacionesAdapter.notifyDataSetChanged();
-                actualizarContadorNoLeidas();
+                // Fallo silencioso - la notificación ya se marcó localmente
+                // El usuario no necesita saber de este error técnico
             }
         });
     }
@@ -493,16 +535,20 @@ public class NotificacionesActivity extends AppCompatActivity implements Notific
 
                         Snackbar.make(rvNotificaciones, "Todas las notificaciones eliminadas", Snackbar.LENGTH_SHORT).show();
                     } else {
-                        DialogHelper.showErrorDialog(NotificacionesActivity.this,
-                            "Error al eliminar las notificaciones");
+                        // Error - mostrar con Toast
+                        android.widget.Toast.makeText(NotificacionesActivity.this,
+                            "Error al eliminar las notificaciones",
+                            android.widget.Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 @Override
                 public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
                     swipeRefresh.setRefreshing(false);
-                    DialogHelper.showErrorDialog(NotificacionesActivity.this,
-                        "Error de conexión: " + t.getMessage());
+                    // Error de conexión - mostrar con Toast
+                    android.widget.Toast.makeText(NotificacionesActivity.this,
+                        "Error de conexión",
+                        android.widget.Toast.LENGTH_SHORT).show();
                 }
             });
     }
